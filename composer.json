@@ -1,0 +1,46 @@
+{
+  "name": "yuncms/yuncms-trade",
+  "description": "The trade module for yuncms.",
+  "keywords": [
+    "yii2",
+    "yuncms-trade",
+    "trade"
+  ],
+  "type": "yii2-extension",
+  "license": "MIT",
+  "require": {
+    "yiisoft/yii2": "~2.0.6",
+    "yuncms/yuncms-user": "~2.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "yuncms\\trade\\": ""
+    }
+  },
+  "extra": {
+    "yuncms": {
+      "id": "trade",
+      "translate": {
+        "class": "yii\\i18n\\PhpMessageSource",
+        "sourceLanguage": "en-US",
+        "basePath": "@yuncms/trade/messages"
+      },
+      "migrationNamespace": "yuncms\\trade\\migrations",
+      "backend": {
+        "class": "yuncms\\trade\\backend\\Module"
+      },
+      "frontend": {
+        "class": "yuncms\\trade\\frontend\\Module"
+      }
+    },
+    "branch-alias": {
+      "dev-master": "2.0.0-dev"
+    }
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://asset-packagist.org"
+    }
+  ]
+}
