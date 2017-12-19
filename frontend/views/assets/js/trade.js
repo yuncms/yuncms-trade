@@ -21,7 +21,7 @@ window.yii.trade = (function ($) {
     function getTradeStatus(id) {
         var getTradeStatusInterval = setInterval(function () {
             $.get("/trade/trade/query?id=" + id, function (result) {
-                if (result.status == 'success') {
+                if (result.status === 'success') {
                     clearInterval(getTradeStatusInterval);
                     window.location.href = "/trade/trade/return?id=" + id;
                 }
