@@ -12,5 +12,5 @@ namespace yuncms\trade\frontend;
  */
 class Module extends \yuncms\trade\Module
 {
-
+    public $defaultRoute = 'trade';
 }

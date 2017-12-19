@@ -16,6 +16,8 @@ use yuncms\trade\backend\models\TradeSearch;
  */
 class TradeController extends Controller
 {
+    public $defaultAction = 'index';
+
     /**
      * @inheritdoc
      */
@@ -75,7 +77,7 @@ class TradeController extends Controller
             return ActiveForm::validate($model);
         }
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            Yii::$app->getSession()->setFlash('success', Yii::t('payment', 'Update success.'));
+            Yii::$app->getSession()->setFlash('success', Yii::t('trade', 'Update success.'));
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
             return $this->render('update', [
@@ -97,7 +99,7 @@ class TradeController extends Controller
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();
-        Yii::$app->getSession()->setFlash('success', Yii::t('payment', 'Delete success.'));
+        Yii::$app->getSession()->setFlash('success', Yii::t('trade', 'Delete success.'));
         return $this->redirect(['index']);
     }
 
@@ -117,9 +119,9 @@ class TradeController extends Controller
                 $model = $this->findModel($id);
                 $model->delete();
             }
-            Yii::$app->getSession()->setFlash('success', Yii::t('payment', 'Delete success.'));
+            Yii::$app->getSession()->setFlash('success', Yii::t('trade', 'Delete success.'));
         } else {
-            Yii::$app->getSession()->setFlash('success', Yii::t('payment', 'Delete failed.'));
+            Yii::$app->getSession()->setFlash('success', Yii::t('trade', 'Delete failed.'));
         }
         return $this->redirect(['index']);
     }

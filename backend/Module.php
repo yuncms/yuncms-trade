@@ -8,5 +8,8 @@ namespace yuncms\trade\backend;
 
 class Module extends \yuncms\trade\Module
 {
-
+    /**
+     * @var string 默认路由
+     */
+    public $defaultRoute = 'trade';
 }

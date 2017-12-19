@@ -21,6 +21,11 @@ use yuncms\trade\models\Trade;
 class TradeController extends Controller
 {
     /**
+     * @var string 默认操作
+     */
+    public $defaultAction = 'create';
+
+    /**
      * @inheritdoc
      */
     public function behaviors()

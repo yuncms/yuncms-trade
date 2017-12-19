@@ -5,12 +5,12 @@ namespace yuncms\trade\backend\models;
 use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use yuncms\payment\models\Payment;
+use yuncms\trade\models\Trade;
 
 /**
  * PaymentSearch represents the model behind the search form about `yuncms\payment\models\Payment`.
  */
-class TradeSearch extends Payment
+class TradeSearch extends Trade
 {
     /**
      * @inheritdoc
@@ -19,8 +19,8 @@ class TradeSearch extends Payment
     {
         return [
             [['id', 'model_id', 'pay_id', 'gateway', 'currency', 'ip', 'note'], 'safe'],
-            [['user_id', 'name', 'trade_type', 'trade_state'], 'integer'],
-            [['money'], 'number'],
+            [['user_id', 'subject', 'type', 'state'], 'integer'],
+            [['total_amount'], 'number'],
         ];
     }
 
@@ -42,7 +42,7 @@ class TradeSearch extends Payment
      */
     public function search($params)
     {
-        $query = Payment::find();
+        $query = Trade::find();
 
         $query->orderBy(['id' => SORT_DESC]);
 
@@ -61,10 +61,10 @@ class TradeSearch extends Payment
         // grid filtering conditions
         $query->andFilterWhere([
             'user_id' => $this->user_id,
-            'name' => $this->name,
-            'money' => $this->money,
-            'trade_type' => $this->trade_type,
-            'trade_state' => $this->trade_state,
+            'subject' => $this->subject,
+            'total_amount' => $this->total_amount,
+            'type' => $this->type,
+            'state' => $this->state,
         ]);
 
         $query->andFilterWhere(['like', 'id', $this->id])

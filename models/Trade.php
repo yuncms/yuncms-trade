@@ -126,7 +126,7 @@ class Trade extends ActiveRecord
         return [
             [['type', 'currency', 'subject', 'total_amount'], 'required'],
 
-            ['id', 'unique', 'message' => Yii::t('payment', 'This id has already been taken')],
+            ['id', 'unique', 'message' => Yii::t('trade', 'This id has already been taken')],
 
             ['type', 'default', 'value' => static::TYPE_NATIVE],
             ['type', 'in', 'range' => [static::TYPE_NATIVE, static::TYPE_JS_API, static::TYPE_APP, static::TYPE_H5, static::TYPE_MICROPAY, static::TYPE_OFFLINE,]],
@@ -158,24 +158,24 @@ class Trade extends ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => Yii::t('payment', 'ID'),
-            'user_id' => Yii::t('payment', 'User ID'),
-            'gateway' => Yii::t('payment', 'Gateway'),
-            'type' => Yii::t('payment', 'Trade Type'),
-            'pay_id' => Yii::t('payment', 'Trade No'),
-            'currency' => Yii::t('payment', 'Currency'),
-            'subject' => Yii::t('payment', 'Subject'),
-            'total_amount' => Yii::t('payment', 'Total Amount'),
-            'discountable_amount' => Yii::t('payment', 'Discountable Amount'),
-            'body' => Yii::t('payment', 'Body'),
-            'model_id' => Yii::t('payment', 'Model ID'),
-            'model_class' => Yii::t('payment', 'Model Class'),
-            'state' => Yii::t('payment', 'Trade State'),
-            'ip' => Yii::t('payment', 'IP'),
-            'note' => Yii::t('payment', 'Note'),
-            'return_url' => Yii::t('payment', 'Return Url'),
-            'created_at' => Yii::t('payment', 'Created At'),
-            'updated_at' => Yii::t('payment', 'Updated At'),
+            'id' => Yii::t('trade', 'ID'),
+            'user_id' => Yii::t('trade', 'User ID'),
+            'gateway' => Yii::t('trade', 'Gateway'),
+            'type' => Yii::t('trade', 'Trade Type'),
+            'pay_id' => Yii::t('trade', 'Trade No'),
+            'currency' => Yii::t('trade', 'Currency'),
+            'subject' => Yii::t('trade', 'Subject'),
+            'total_amount' => Yii::t('trade', 'Total Amount'),
+            'discountable_amount' => Yii::t('trade', 'Discountable Amount'),
+            'body' => Yii::t('trade', 'Body'),
+            'model_id' => Yii::t('trade', 'Model ID'),
+            'model_class' => Yii::t('trade', 'Model Class'),
+            'state' => Yii::t('trade', 'Trade State'),
+            'ip' => Yii::t('trade', 'IP'),
+            'note' => Yii::t('trade', 'Note'),
+            'return_url' => Yii::t('trade', 'Return Url'),
+            'created_at' => Yii::t('trade', 'Created At'),
+            'updated_at' => Yii::t('trade', 'Updated At'),
         ];
     }
 
@@ -223,17 +223,19 @@ class Trade extends ActiveRecord
         return $this->state == self::STATE_SUCCESS;
     }
 
+
+
     /**
      * 获取状态列表
      * @return array
      */
-    public static function getStatusList()
+    public static function getStateList()
     {
         return [
-            self::STATE_NOT_PAY => Yii::t('payment', 'Not Pay'),
-            self::STATE_SUCCESS => Yii::t('payment', 'State Success'),
-            self::STATE_FAILED => Yii::t('payment', 'State Failed'),
-            self::STATE_CLOSED => Yii::t('payment', 'State Close'),
+            self::STATE_NOT_PAY => Yii::t('trade', 'Not Pay'),
+            self::STATE_SUCCESS => Yii::t('trade', 'State Success'),
+            self::STATE_FAILED => Yii::t('trade', 'State Failed'),
+            self::STATE_CLOSED => Yii::t('trade', 'State Close'),
         ];
     }
 
@@ -313,29 +315,29 @@ class Trade extends ActiveRecord
 
     /**
      * 设置支付状态
-     * @param string $paymentId
+     * @param string $id
      * @param int $status
      * @param array $params
      * @return bool
      */
-    public static function setPayStatus($paymentId, $status, $params)
+    public static function setPayStatus($id, $status, $params)
     {
-        if (($payment = static::findOne(['id' => $paymentId])) == null) {
+        if (($trade = static::findOne(['id' => $id])) == null) {
             return false;
         }
-        if (static::STATE_SUCCESS == $payment->trade_state) {
+        if (static::STATE_SUCCESS == $trade->state) {
             return true;
         }
         if ($status == true) {
-            $payment->updateAttributes([
+            $trade->updateAttributes([
                 'pay_id' => $params['pay_id'],
                 'trade_state' => static::STATE_SUCCESS,
                 'note' => $params['message']
             ]);//标记支付已经完成
-            /** @var \yuncms\payment\OrderInterface $orderModel */
-            $orderModel = $payment->model;
-            if (!empty($payment->model_id) && !empty($orderModel)) {
-                $orderModel::setPayStatus($payment->model_id, $paymentId, $status, $params);
+            /** @var \yuncms\trade\OrderInterface $orderModel */
+            $orderModel = $trade->model;
+            if (!empty($trade->model_id) && !empty($orderModel)) {
+                $orderModel::setPayStatus($trade->model_id, $id, $status, $params);
             }
             return true;
         }

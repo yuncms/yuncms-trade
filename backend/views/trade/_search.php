@@ -4,7 +4,7 @@ use yii\helpers\Html;
 use xutl\inspinia\ActiveForm;
 
 /* @var $this yii\web\View */
-/* @var $model yuncms\payment\backend\models\PaymentSearch */
+/* @var $model yuncms\trade\backend\models\TradeSearch */
 /* @var $form yii\widgets\ActiveForm */
 ?>
 

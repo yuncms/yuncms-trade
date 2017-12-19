@@ -5,10 +5,10 @@ use yii\widgets\DetailView;
 use xutl\inspinia\Box;
 use xutl\inspinia\Toolbar;
 use xutl\inspinia\Alert;
-use yuncms\payment\models\Payment;
+use yuncms\trade\models\Trade;
 
 /* @var $this yii\web\View */
-/* @var $model yuncms\payment\models\Payment */
+/* @var $model yuncms\trade\models\Trade */
 
 $this->title = $model->name;
 $this->params['breadcrumbs'][] = ['label' => Yii::t('trade', 'Manage Payment'), 'url' => ['index']];
@@ -64,17 +64,17 @@ $this->params['breadcrumbs'][] = $this->title;
                     [
                         'label' => Yii::t('trade', 'Pay Type'),
                         'value' => function ($model) {
-                            if ($model->trade_type == Payment::TYPE_NATIVE) {
+                            if ($model->type == Trade::TYPE_NATIVE) {
                                 return Yii::t('trade', 'Native Payment');
-                            } else if ($model->trade_type == Payment::TYPE_MWEB) {
+                            } else if ($model->type == Payment::TYPE_MWEB) {
                                 return Yii::t('trade', 'Mweb Payment');
-                            } else if ($model->trade_type == Payment::TYPE_APP) {
+                            } else if ($model->type == Payment::TYPE_APP) {
                                 return Yii::t('trade', 'App Payment');
-                            } else if ($model->trade_type == Payment::TYPE_JS_API) {
+                            } else if ($model->type == Payment::TYPE_JS_API) {
                                 return Yii::t('trade', 'Jsapi Payment');
-                            } else if ($model->trade_type == Payment::TYPE_MICROPAY) {
+                            } else if ($model->type == Payment::TYPE_MICROPAY) {
                                 return Yii::t('trade', 'Micro Payment');
-                            } else if ($model->trade_type == Payment::TYPE_OFFLINE) {
+                            } else if ($model->type == Payment::TYPE_OFFLINE) {
                                 return Yii::t('trade', 'Office Payment');
                             }
                         },
@@ -83,19 +83,19 @@ $this->params['breadcrumbs'][] = $this->title;
                     [
                         'label' => Yii::t('trade', 'Pay State'),
                         'value' => function ($model) {
-                            if ($model->trade_state == Payment::STATE_NOT_PAY) {
+                            if ($model->state == Trade::STATE_NOT_PAY) {
                                 return Yii::t('trade', 'State Not Pay');
-                            } else if ($model->trade_state == Payment::STATE_SUCCESS) {
+                            } else if ($model->state == Payment::STATE_SUCCESS) {
                                 return Yii::t('trade', 'State Success');
-                            } else if ($model->trade_state == Payment::STATE_FAILED) {
+                            } else if ($model->state == Payment::STATE_FAILED) {
                                 return Yii::t('trade', 'State Failed');
-                            } else if ($model->trade_state == Payment::STATE_REFUND) {
+                            } else if ($model->state == Payment::STATE_REFUND) {
                                 return Yii::t('trade', 'State Refund');
-                            } else if ($model->trade_state == Payment::STATE_CLOSED) {
+                            } else if ($model->state == Payment::STATE_CLOSED) {
                                 return Yii::t('trade', 'State Close');
-                            } else if ($model->trade_state == Payment::STATE_REVOKED) {
+                            } else if ($model->state == Payment::STATE_REVOKED) {
                                 return Yii::t('trade', 'State Revoked');
-                            } else if ($model->trade_state == Payment::STATE_ERROR) {
+                            } else if ($model->state == Payment::STATE_ERROR) {
                                 return Yii::t('trade', 'State Error');
                             }
                         },

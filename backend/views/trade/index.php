@@ -88,7 +88,7 @@ $this->registerJs("jQuery(\"#batch_deletion\").on(\"click\", function () {
                         'format' => 'raw'
                     ],
                     [
-                        'header' => Yii::t('payment', 'Trade State'),
+                        'header' => Yii::t('trade', 'Trade State'),
                         'value' => function ($model) {
                             if ($model->trade_state == Payment::STATE_NOT_PAY) {
                                 return Yii::t('trade', 'State Not Pay');
