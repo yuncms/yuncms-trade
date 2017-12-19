@@ -1,13 +1,7 @@
 <?php
-
-use xutl\jquery\qrcode\QRCodeAsset;
-
-QRCodeAsset::register($this);
+use xutl\jquery\qrcode\QRCode;
 
 /* @var \yii\web\View $this */
-
-
-$this->registerJs('$(\'#code\').qrcode("'.$paymentParams['qr_code'].'");')
+/* @var array $paymentParams */
 ?>
-
-<div id="code"></div>
+<?= QRCode::widget(['clientOptions' => ['text'=>$paymentParams['qr_code']]]);?>
