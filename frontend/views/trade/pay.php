@@ -8,11 +8,11 @@ use yuncms\trade\frontend\assets\TradeAsset;
 /* @var \yuncms\trade\models\Trade $trade */
 /* @var array $paymentParams */
 TradeAsset::register($this);
-$js = 'setInterval("yii.trade.getPaymentStatus(' . $trade->id . ')", 3000);';
+$js = 'yii.trade.getTradeStatus(' . $trade->id . ');';
 if (!Yii::$app->request->isAjax && isset($paymentParams['data'])) {
     $this->registerJs($js, View::POS_BEGIN);
 } else {
-    echo '<script type="text/javascript">' . $js . '</script>';
+    $this->registerJs($js);
 }
 ?>
 <?= QRCode::widget(['clientOptions' => ['text' => $paymentParams['qr_code']]]); ?>

@@ -9,13 +9,25 @@ window.yii.trade = (function ($) {
          * 查询支付单状态
          * @param id
          */
-        getPaymentStatus: function (id) {
+        getTradeStatus: function (id) {
+            getTradeStatus(id);
+        }
+    };
+
+    /**
+     * 查询支付状态
+     * @param id
+     */
+    function getTradeStatus(id) {
+        var getTradeStatusInterval = setInterval(function () {
             $.get("/trade/trade/query?id=" + id, function (result) {
                 if (result.status == 'success') {
+                    clearInterval(getTradeStatusInterval);
                     window.location.href = "/trade/trade/return?id=" + id;
                 }
             });
-        }
-    };
+        }, 3000);
+    }
+
     return pub;
 })(window.jQuery);

@@ -28,6 +28,6 @@ class TradeAsset extends AssetBundle
      * @var array
      */
     public $depends = [
-        'yii\web\JqueryAsset',
+        'yii\web\YiiAsset',
     ];
 }
