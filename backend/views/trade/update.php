@@ -6,11 +6,11 @@ use xutl\inspinia\Toolbar;
 use xutl\inspinia\Alert;
 
 /* @var $this yii\web\View */
-/* @var $model yuncms\payment\models\Payment */
+/* @var $model yuncms\trade\models\Trade */
 
-$this->title = Yii::t('trade', 'Update Payment') . ': ' . $model->name;
+$this->title = Yii::t('trade', 'Update Payment') . ': ' . $model->subject;
 $this->params['breadcrumbs'][] = ['label' => Yii::t('trade', 'Manage Payment'), 'url' => ['index']];
-$this->params['breadcrumbs'][] = ['label' => $model->name, 'url' => ['view', 'id' => $model->id]];
+$this->params['breadcrumbs'][] = ['label' => $model->subject, 'url' => ['view', 'id' => $model->id]];
 $this->params['breadcrumbs'][] = Yii::t('trade', 'Update');
 ?>
 <div class="wrapper wrapper-content animated fadeInRight">

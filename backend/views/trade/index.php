@@ -7,10 +7,10 @@ use xutl\inspinia\Toolbar;
 use xutl\inspinia\Alert;
 use yii\grid\GridView;
 use yii\widgets\Pjax;
-use yuncms\payment\models\Payment;
+use yuncms\trade\models\Trade;
 
 /* @var $this yii\web\View */
-/* @var $searchModel yuncms\payment\backend\models\PaymentSearch */
+/* @var $searchModel yuncms\trade\backend\models\TradeSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
 $this->title = Yii::t('trade', 'Manage Payment');
@@ -64,24 +64,24 @@ $this->registerJs("jQuery(\"#batch_deletion\").on(\"click\", function () {
                     'pay_id',
                     'user_id',
                     'user.nickname',
-                    'name',
+                    'subject',
                     'gateway',
                     'currency',
-                    'money',
+                    'total_amount',
                     [
                         'header' => Yii::t('trade', 'Trade Type'),
                         'value' => function ($model) {
-                            if ($model->trade_type == Payment::TYPE_NATIVE) {
+                            if ($model->type == Trade::TYPE_NATIVE) {
                                 return Yii::t('trade', 'Native Payment');
-                            } else if ($model->trade_type == Payment::TYPE_MWEB) {
+                            } else if ($model->type == Trade::TYPE_MWEB) {
                                 return Yii::t('trade', 'Mweb Payment');
-                            } else if ($model->trade_type == Payment::TYPE_APP) {
+                            } else if ($model->type == Trade::TYPE_APP) {
                                 return Yii::t('trade', 'App Payment');
-                            } else if ($model->trade_type == Payment::TYPE_JS_API) {
+                            } else if ($model->type == Trade::TYPE_JS_API) {
                                 return Yii::t('trade', 'Jsapi Payment');
-                            } else if ($model->trade_type == Payment::TYPE_MICROPAY) {
+                            } else if ($model->type == Trade::TYPE_MICROPAY) {
                                 return Yii::t('trade', 'Micro Payment');
-                            } else if ($model->trade_type == Payment::TYPE_OFFLINE) {
+                            } else if ($model->type == Trade::TYPE_OFFLINE) {
                                 return Yii::t('trade', 'Office Payment');
                             }
                         },
@@ -90,19 +90,19 @@ $this->registerJs("jQuery(\"#batch_deletion\").on(\"click\", function () {
                     [
                         'header' => Yii::t('trade', 'Trade State'),
                         'value' => function ($model) {
-                            if ($model->trade_state == Payment::STATE_NOT_PAY) {
+                            if ($model->state == Trade::STATE_NOT_PAY) {
                                 return Yii::t('trade', 'State Not Pay');
-                            } else if ($model->trade_state == Payment::STATE_SUCCESS) {
+                            } else if ($model->state == Trade::STATE_SUCCESS) {
                                 return Yii::t('trade', 'State Success');
-                            } else if ($model->trade_state == Payment::STATE_FAILED) {
+                            } else if ($model->state == Trade::STATE_FAILED) {
                                 return Yii::t('trade', 'State Failed');
-                            } else if ($model->trade_state == Payment::STATE_REFUND) {
+                            } else if ($model->state == Trade::STATE_REFUND) {
                                 return Yii::t('trade', 'State Refund');
-                            } else if ($model->trade_state == Payment::STATE_CLOSED) {
+                            } else if ($model->state == Trade::STATE_CLOSED) {
                                 return Yii::t('trade', 'State Close');
-                            } else if ($model->trade_state == Payment::STATE_REVOKED) {
+                            } else if ($model->state == Trade::STATE_REVOKED) {
                                 return Yii::t('trade', 'State Revoked');
-                            } else if ($model->trade_state == Payment::STATE_ERROR) {
+                            } else if ($model->state == Trade::STATE_ERROR) {
                                 return Yii::t('trade', 'State Error');
                             }
                         },

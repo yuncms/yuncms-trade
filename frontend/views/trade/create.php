@@ -25,6 +25,7 @@ foreach (Yii::$app->payment->components as $id=>$component) {
                     'layout' => 'horizontal',
                     'enableClientValidation' => true
                 ]); ?>
+                <?= $form->field($model, 'subject'); ?>
                 <?= $form->field($model, 'currency')->inline(true)->radioList(['CNY' => '人民币', 'USD' => '美元']); ?>
                 <?= $form->field($model, 'total_amount'); ?>
                 <?= $form->field($model, 'type')->inline(true)->radioList(['1' => '订单支付', '3' => '充值', '4' => '购买金币']); ?>

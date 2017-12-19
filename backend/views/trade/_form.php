@@ -4,7 +4,7 @@ use yii\helpers\Html;
 use xutl\inspinia\ActiveForm;
 
 /* @var \yii\web\View $this */
-/* @var yuncms\payment\models\Payment $model */
+/* @var yuncms\trade\models\Trade $model */
 /* @var ActiveForm $form */
 ?>
 <?php $form = ActiveForm::begin([
@@ -19,11 +19,11 @@ use xutl\inspinia\ActiveForm;
 <div class="hr-line-dashed"></div>
 <?= $form->field($model, 'currency')->textInput(['maxlength' => true]) ?>
 <div class="hr-line-dashed"></div>
-<?= $form->field($model, 'money')->textInput(['maxlength' => true]) ?>
+<?= $form->field($model, 'total_amount')->textInput(['maxlength' => true]) ?>
 <div class="hr-line-dashed"></div>
-<?= $form->field($model, 'trade_type')->textInput() ?>
+<?= $form->field($model, 'type')->textInput() ?>
 <div class="hr-line-dashed"></div>
-<?= $form->field($model, 'trade_state')->textInput() ?>
+<?= $form->field($model, 'state')->textInput() ?>
 <div class="hr-line-dashed"></div>
 
 <div class="form-group">

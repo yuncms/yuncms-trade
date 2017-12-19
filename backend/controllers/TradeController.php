@@ -121,7 +121,7 @@ class TradeController extends Controller
             }
             Yii::$app->getSession()->setFlash('success', Yii::t('trade', 'Delete success.'));
         } else {
-            Yii::$app->getSession()->setFlash('success', Yii::t('trade', 'Delete failed.'));
+            Yii::$app->getSession()->setFlash('error', Yii::t('trade', 'Delete failed.'));
         }
         return $this->redirect(['index']);
     }

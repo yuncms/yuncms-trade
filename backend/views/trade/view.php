@@ -10,7 +10,7 @@ use yuncms\trade\models\Trade;
 /* @var $this yii\web\View */
 /* @var $model yuncms\trade\models\Trade */
 
-$this->title = $model->name;
+$this->title = $model->subject;
 $this->params['breadcrumbs'][] = ['label' => Yii::t('trade', 'Manage Payment'), 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -57,10 +57,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     'model_id',
                     'pay_id',
                     'user_id',
-                    'name',
+                    'subject',
                     'gateway',
                     'currency',
-                    'money',
+                    'total_amount',
                     [
                         'label' => Yii::t('trade', 'Pay Type'),
                         'value' => function ($model) {

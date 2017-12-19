@@ -64,25 +64,26 @@ class TradeController extends Controller
     }
 
     /**
-     * 去付款
+     * WEB付款
      * @param int $id
      * @return string
-     * @throws NotFoundHttpException
      * @throws \yii\base\InvalidConfigException
      */
     public function actionPay($id)
     {
-        $payment = $this->findModel($id);
-        $paymentParams = [];
-        Yii::$app->payment->get($payment->gateway)->payment($payment, $paymentParams);
-        if ($paymentParams) {
+        try {
+            $trade = $this->findModel($id);
+            $paymentParams = [];
+            Yii::$app->payment->get($trade->gateway)->preCreate($trade, $paymentParams);
             if (Yii::$app->request->isAjax) {
-                return $this->renderPartial('pay', ['payment' => $payment, 'paymentParams' => $paymentParams]);
+                return $this->renderPartial('pay', ['trade' => $trade, 'paymentParams' => $paymentParams]);
             } else {
-                return $this->render('pay', ['payment' => $payment, 'paymentParams' => $paymentParams]);
+                return $this->render('pay', ['trade' => $trade, 'paymentParams' => $paymentParams]);
             }
+        } catch (NotFoundHttpException $e) {
+            Yii::$app->getSession()->setFlash('error', $e->getMessage());
+            return $this->redirect(['/trade/trade/create']);
         }
-        return $this->redirect(['/trade/trade/create', 'id' => $payment->id]);
     }
 
     /**
@@ -113,7 +114,7 @@ class TradeController extends Controller
         if (($model = Trade::findOne($id)) !== null) {
             return $model;
         } else {
-            throw new NotFoundHttpException('The requested page does not exist.');
+            throw new NotFoundHttpException(Yii::t('trade', 'The requested trade does not exist.'));
         }
     }
 }
