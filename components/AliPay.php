@@ -15,6 +15,7 @@ use yii\helpers\Json;
 use yii\httpclient\Client;
 use yii\httpclient\RequestEvent;
 use yuncms\trade\BaseClient;
+use yuncms\trade\models\Trade;
 use yuncms\trade\PaymentException;
 
 /**
@@ -50,6 +51,11 @@ class AliPay extends BaseClient
      * @var string 网关地址
      */
     public $baseUrl = 'https://openapi.alipay.com';
+
+    /**
+     * @var string 跳转方法
+     */
+    public $redirectMethod = 'QRCODE';
 
     /**
      * 初始化
@@ -90,16 +96,65 @@ class AliPay extends BaseClient
      */
     public function getTitle()
     {
-        return 'Alipay';
+        return Yii::t('trade', 'Alipay');
+    }
+
+    /**
+     * 请求事件
+     * @param RequestEvent $event
+     * @return void
+     */
+    public function RequestEvent(RequestEvent $event)
+    {
+        $params = $event->request->getData();
+        $params = ArrayHelper::merge([
+            'app_id' => $this->appId,
+            'format' => 'JSON',
+            'charset' => 'utf-8',
+            'sign_type' => $this->signType,
+            'timestamp' => date('Y-m-d H:i:s'),
+            'version' => '1.0',
+        ], $params);
+        $params['biz_content'] = Json::encode($params['biz_content']);
+        //签名
+        if ($this->signType == self::SIGNATURE_METHOD_RSA2) {
+            $params['sign'] = openssl_sign($this->getSignContent($params), $sign, $this->privateKey, OPENSSL_ALGO_SHA256) ? base64_encode($sign) : null;
+        } elseif ($this->signType == self::SIGNATURE_METHOD_RSA) {
+            $params['sign'] = openssl_sign($this->getSignContent($params), $sign, $this->privateKey, OPENSSL_ALGO_SHA1) ? base64_encode($sign) : null;
+        }
+        $event->request->setData($params);
+    }
+
+    /**
+     * 数据签名处理
+     * @param array $toBeSigned
+     * @param bool $verify
+     * @return bool|string
+     */
+    protected function getSignContent(array $toBeSigned, $verify = false)
+    {
+        ksort($toBeSigned);
+        $stringToBeSigned = '';
+        foreach ($toBeSigned as $k => $v) {
+            if ($verify && $k != 'sign' && $k != 'sign_type') {
+                $stringToBeSigned .= $k . '=' . $v . '&';
+            }
+            if (!$verify && $v !== '' && !is_null($v) && $k != 'sign' && '@' != substr($v, 0, 1)) {
+                $stringToBeSigned .= $k . '=' . $v . '&';
+            }
+        }
+        $stringToBeSigned = substr($stringToBeSigned, 0, -1);
+        unset($k, $v);
+        return $stringToBeSigned;
     }
 
     /**
      * 统一下单
      * @param array $params
-     * @param array $paymentParams
+     * @return array|bool
      * @throws PaymentException
      */
-    public function preCreate(array $params, array $paymentParams)
+    public function preCreate(array $params)
     {
         $data = [
             'method' => 'alipay.trade.precreate',
@@ -107,14 +162,23 @@ class AliPay extends BaseClient
                 'out_trade_no' => $params['id'],//商户订单号
                 'total_amount' => $params['total_amount'],//订单总金额
                 'subject' => $params['subject'],//订单标题
-                //'seller_id' => '2088102171430364',//卖家支付宝用户ID
-
-                //'discountable_amount' => '',//可打折金额
-                'return_url' => 'http://dev.yuncms.net',
-                'notify_url' => 'http://dev.yuncms.net',
+                'discountable_amount' => $params['discountable_amount'],//可打折金额
+                'return_url' => $this->getReturnUrl(),
+                'notify_url' => $this->getNoticeUrl(),
             ],
         ];
-        $paymentParams = $this->sendRequest($data);
+        return $this->sendRequest($data);
+    }
+
+    /**
+     * 统一下单
+     * @param Trade $trade
+     * @param array $paymentParams
+     * @throws PaymentException
+     */
+    public function payment(Trade $trade, &$paymentParams)
+    {
+        $paymentParams = $this->preCreate($trade->toArray());
     }
 
     /**
@@ -231,54 +295,6 @@ class AliPay extends BaseClient
         return openssl_verify($toVerify, base64_decode($sign), $this->publicKey, OPENSSL_ALGO_SHA256) === 1 ? $data : false;
     }
 
-    /**
-     * 请求事件
-     * @param RequestEvent $event
-     * @return void
-     */
-    public function RequestEvent(RequestEvent $event)
-    {
-        $params = $event->request->getData();
-        $params = ArrayHelper::merge([
-            'app_id' => $this->appId,
-            'format' => 'JSON',
-            'charset' => 'utf-8',
-            'sign_type' => $this->signType,
-            'timestamp' => date('Y-m-d H:i:s'),
-            'version' => '1.0',
-        ], $params);
-        $params['biz_content'] = Json::encode($params['biz_content']);
-        //签名
-        if ($this->signType == self::SIGNATURE_METHOD_RSA2) {
-            $params['sign'] = openssl_sign($this->getSignContent($params), $sign, $this->privateKey, OPENSSL_ALGO_SHA256) ? base64_encode($sign) : null;
-        } elseif ($this->signType == self::SIGNATURE_METHOD_RSA) {
-            $params['sign'] = openssl_sign($this->getSignContent($params), $sign, $this->privateKey, OPENSSL_ALGO_SHA1) ? base64_encode($sign) : null;
-        }
-        $event->request->setData($params);
-    }
-
-    /**
-     * 数据签名处理
-     * @param array $toBeSigned
-     * @param bool $verify
-     * @return bool|string
-     */
-    protected function getSignContent(array $toBeSigned, $verify = false)
-    {
-        ksort($toBeSigned);
-        $stringToBeSigned = '';
-        foreach ($toBeSigned as $k => $v) {
-            if ($verify && $k != 'sign' && $k != 'sign_type') {
-                $stringToBeSigned .= $k . '=' . $v . '&';
-            }
-            if (!$verify && $v !== '' && !is_null($v) && $k != 'sign' && '@' != substr($v, 0, 1)) {
-                $stringToBeSigned .= $k . '=' . $v . '&';
-            }
-        }
-        $stringToBeSigned = substr($stringToBeSigned, 0, -1);
-        unset($k, $v);
-        return $stringToBeSigned;
-    }
 
     /**
      * 支付响应

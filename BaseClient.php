@@ -8,11 +8,12 @@
 namespace yuncms\trade;
 
 use Yii;
-use yii\helpers\Inflector;
-use yii\helpers\StringHelper;
+use yii\web\Request;
 use yii\helpers\Url;
 use yii\httpclient\Client;
-use yii\web\Request;
+use yii\helpers\Inflector;
+use yii\helpers\StringHelper;
+use yuncms\trade\models\Trade;
 
 /**
  * Class BaseClient
@@ -192,60 +193,6 @@ abstract class BaseClient extends Client implements ClientInterface
     }
 
     /**
-     * 跳转去支付
-     * @param array $params 支付参数
-     * @throws \Exception
-     */
-    public function getRedirectResponse($params)
-    {
-        if ('GET' === $this->redirectMethod) {
-            $url = $this->composeUrl($this->redirectUrl, $params);
-            Yii::$app->response->redirect($url);
-            Yii::$app->end();
-        } elseif ('POST' === $this->redirectMethod) {
-            $hiddenFields = '';
-            foreach ($params as $key => $value) {
-                $hiddenFields .= sprintf(
-                        '<input type="hidden" name="%1$s" value="%2$s" />',
-                        htmlentities($key, ENT_QUOTES, 'UTF-8', false),
-                        htmlentities($value, ENT_QUOTES, 'UTF-8', false)
-                    ) . "\n";
-            }
-            $output = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Redirecting...</title></head><body onload="document.forms[0].submit();" style=" text-align:center;background-color: #eff0f1;"><img src="data:image/gif;base64,R0lGODlhMgAyAKIHAP////vZu/JyBfvavvvavfJ2DPN4D////yH/C05FVFNDQVBFMi4wAwEAAAAh+QQFBwAHACwAAAAAMgAyAEADpXi63P4wygmFETTLwHvIQCgCWjOKpXOGqcmmaNuupGzfeK5PwfAxgqAQw4jtjjlj8mWjuWoLJ3JKrVqvk6EQe/B0GhZidHXs/UrKJnMJ1UjVJ65c8ZbUcel7Gruf+/+AgYKDO0MFhApaFnIeBA0FQodFIztePSBkOgQdjm6UiKBccWxrFHcwmZ59qKuhrqRtE6OwpRCnMrN0n2OtR7d/ua/Cw8Q7CQAh+QQFBwAHACwMAAgAGwALAEADNHi6rPEtHkArkFHoLVRtTwgxG8aIoTlZFDguXLleaqbVjoib6IuxrhSJM7PsYjfg7hA7JAAAIfkEBQcABwAsFgAIABUAFQBAAzd4B6z+MMZAa5DYic0F+81TZWRpHpwCfqfDihbVKuMcpXOXrvManjxY7RSTtWK2pLKky+kEzlQCACH5BAUHAAcALCAADAALABsAQAM0eAes/jC6QJW4WDzGm6RgdWBRx5WeNIlPCKpORkIzZNomgJ9w7x8uiIulCP58MppM80g+EgAh+QQFBwAHACwWABYAFQAVAEADOHi63AfQyamEvaKFTfuDINBtJNdcXiqFoLq0KjmhTCkvGO2q7M5Grt5uSNSUdjYTDmO8LXM7qCsBACH5BAUHAAcALAwAIAAbAAsAQAMzeCes/tCBGWO4OFTHensYNI2T120iSS2fk4XPiELwzJ62RN5efqgUEy2Tks1eF9/mZUsAACH5BAUHAAcALAgAFgAVABUAQAM4eCes/jDKOYOFIGvAeqOVJQZgiWWK15nPyobke4ziCcjHpi2erH4sFW5ILNFktMvr+NDJdKiXMwEAIfkEBQcABwAsCAAMAAsAGwBAAzR4utL7cIUZH7gYvMbb/FSlYFHHlY4UPuAnvmN2RSR6bqYAmXCvuqxWANLyGSsyiGxmyRwSADs=" style="width:80px;margin-left:auto; margin-top:200px "><form action="%1$s" method="post" style="opacity:0"><p>Redirecting to payment page...</p><p>%2$s<input type="submit" value="Continue" /></p></form></body></html>';
-            $output = sprintf(
-                $output,
-                htmlentities($this->redirectUrl, ENT_QUOTES, 'UTF-8', false),
-                $hiddenFields
-            );
-            Yii::$app->response->content = $output;
-            Yii::$app->end();
-        }
-        throw new \Exception('Invalid redirect method "' . $this->redirectMethod . '".');
-    }
-
-    /**
-     * 支付响应
-     * @param Request $request
-     * @param $paymentId
-     * @param $money
-     * @param $message
-     * @param $payId
-     * @return mixed
-     */
-    abstract public function callback(Request $request, &$paymentId, &$money, &$message, &$payId);
-
-    /**
-     * 服务端通知
-     * @param Request $request
-     * @param $paymentId
-     * @param $money
-     * @param $message
-     * @param $payId
-     * @return mixed
-     */
-    abstract public function notice(Request $request, &$paymentId, &$money, &$message, &$payId);
-
-    /**
      * 生成一个指定长度的随机字符串
      * @param int $length
      * @return string
@@ -272,4 +219,87 @@ abstract class BaseClient extends Client implements ClientInterface
         $url .= http_build_query($params, '', '&', PHP_QUERY_RFC3986);
         return $url;
     }
+
+    /**
+     * 跳转去支付
+     * @param array $params
+     * @throws \Exception
+     */
+    public function getRedirectResponse($params)
+    {
+        if ('GET' === $this->redirectMethod) {
+            $url = $this->composeUrl($this->redirectUrl, $params);
+            Yii::$app->response->redirect($url);
+            Yii::$app->end();
+        } elseif ('POST' === $this->redirectMethod) {
+            $hiddenFields = '';
+            foreach ($params as $key => $value) {
+                $hiddenFields .= sprintf(
+                        '<input type="hidden" name="%1$s" value="%2$s" />',
+                        htmlentities($key, ENT_QUOTES, 'UTF-8', false),
+                        htmlentities($value, ENT_QUOTES, 'UTF-8', false)
+                    ) . "\n";
+            }
+            $output = '<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Redirecting...</title>
+    </head>
+    <body onload="document.forms[0].submit();" style=" text-align:center;background-color: #eff0f1;">
+        <img src="data:image/gif;base64,R0lGODlhMgAyAKIHAP////vZu/JyBfvavvvavfJ2DPN4D////yH/C05FVFNDQVBFMi4wAwEAAAAh+QQFBwAHACwAAAAAMgAyAEADpXi63P4wygmFETTLwHvIQCgCWjOKpXOGqcmmaNuupGzfeK5PwfAxgqAQw4jtjjlj8mWjuWoLJ3JKrVqvk6EQe/B0GhZidHXs/UrKJnMJ1UjVJ65c8ZbUcel7Gruf+/+AgYKDO0MFhApaFnIeBA0FQodFIztePSBkOgQdjm6UiKBccWxrFHcwmZ59qKuhrqRtE6OwpRCnMrN0n2OtR7d/ua/Cw8Q7CQAh+QQFBwAHACwMAAgAGwALAEADNHi6rPEtHkArkFHoLVRtTwgxG8aIoTlZFDguXLleaqbVjoib6IuxrhSJM7PsYjfg7hA7JAAAIfkEBQcABwAsFgAIABUAFQBAAzd4B6z+MMZAa5DYic0F+81TZWRpHpwCfqfDihbVKuMcpXOXrvManjxY7RSTtWK2pLKky+kEzlQCACH5BAUHAAcALCAADAALABsAQAM0eAes/jC6QJW4WDzGm6RgdWBRx5WeNIlPCKpORkIzZNomgJ9w7x8uiIulCP58MppM80g+EgAh+QQFBwAHACwWABYAFQAVAEADOHi63AfQyamEvaKFTfuDINBtJNdcXiqFoLq0KjmhTCkvGO2q7M5Grt5uSNSUdjYTDmO8LXM7qCsBACH5BAUHAAcALAwAIAAbAAsAQAMzeCes/tCBGWO4OFTHensYNI2T120iSS2fk4XPiELwzJ62RN5efqgUEy2Tks1eF9/mZUsAACH5BAUHAAcALAgAFgAVABUAQAM4eCes/jDKOYOFIGvAeqOVJQZgiWWK15nPyobke4ziCcjHpi2erH4sFW5ILNFktMvr+NDJdKiXMwEAIfkEBQcABwAsCAAMAAsAGwBAAzR4utL7cIUZH7gYvMbb/FSlYFHHlY4UPuAnvmN2RSR6bqYAmXCvuqxWANLyGSsyiGxmyRwSADs=" style="width:80px;margin-left:auto; margin-top:200px ">
+        <form action="%1$s" method="post" style="opacity:0">
+            <p>Redirecting to payment page...</p>
+            <p>
+                %2$s
+                <input type="submit" value="Continue" />
+            </p>
+        </form>
+    </body>
+</html>';
+            $output = sprintf(
+                $output,
+                htmlentities($this->redirectUrl, ENT_QUOTES, 'UTF-8', false),
+                $hiddenFields
+            );
+
+            Yii::$app->response->content = $output;
+            Yii::$app->end();
+        } else if ('QRCODE' === $this->redirectMethod) {
+
+        }
+        throw new \Exception('Invalid redirect method "' . $this->redirectMethod . '".');
+    }
+
+    /**
+     * 去支付
+     * @param Trade $trade 支付模型对象
+     * @param array $paymentParams 支付参数
+     * @return void
+     */
+    abstract public function payment(Trade $trade, &$paymentParams);
+
+    /**
+     * 支付响应
+     * @param Request $request
+     * @param $paymentId
+     * @param $money
+     * @param $message
+     * @param $payId
+     * @return mixed
+     */
+    abstract public function callback(Request $request, &$paymentId, &$money, &$message, &$payId);
+
+    /**
+     * 服务端通知
+     * @param Request $request
+     * @param $paymentId
+     * @param $money
+     * @param $message
+     * @param $payId
+     * @return mixed
+     */
+    abstract public function notice(Request $request, &$paymentId, &$money, &$message, &$payId);
+
+
 }

@@ -108,9 +108,66 @@ class Wechat extends BaseClient
         $this->on(Client::EVENT_BEFORE_SEND, [$this, 'RequestEvent']);
     }
 
+    /**
+     * @return string
+     */
     public function getTitle()
     {
-        return 'Wechat';
+        return Yii::t('trade', 'Wechat');
+    }
+
+    /**
+     * 请求事件
+     * @param RequestEvent $event
+     * @return void
+     * @throws \yii\base\Exception
+     */
+    public function RequestEvent(RequestEvent $event)
+    {
+        $params = $event->request->getData();
+        $params['appid'] = $this->appId;
+        $params['mch_id'] = $this->mchId;
+        $params['nonce_str'] = $this->generateRandomString(32);
+        $params['sign_type'] = $this->signType;
+        $params['sign'] = $this->generateSignature($params);
+        $event->request->setData($params);
+    }
+
+    /**
+     * 生成签名
+     * @param array $params
+     * @return string
+     * @throws InvalidConfigException
+     */
+    protected function generateSignature(array $params)
+    {
+        $bizParameters = [];
+        foreach ($params as $k => $v) {
+            if ($k != "sign" && $v != "" && !is_array($v)) {
+                $bizParameters[$k] = $v;
+            }
+        }
+        ksort($bizParameters);
+        $bizString = urldecode(http_build_query($bizParameters) . '&key=' . $this->appKey);
+        if ($this->signType == self::SIGNATURE_METHOD_MD5) {
+            $sign = md5($bizString);
+        } elseif ($this->signType == self::SIGNATURE_METHOD_SHA256) {
+            $sign = hash_hmac('sha256', $bizString, $this->appKey);
+        } else {
+            throw new InvalidConfigException ('This encryption is not supported');
+        }
+        return strtoupper($sign);
+    }
+
+    /**
+     * 转换XML到数组
+     * @param \SimpleXMLElement|string $xml
+     * @return array
+     */
+    protected function convertXmlToArray($xml)
+    {
+        libxml_disable_entity_loader(true);
+        return json_decode(json_encode(simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
     }
 
     /**
@@ -184,49 +241,6 @@ class Wechat extends BaseClient
     }
 
     /**
-     * 请求事件
-     * @param RequestEvent $event
-     * @return void
-     * @throws \yii\base\Exception
-     */
-    public function RequestEvent(RequestEvent $event)
-    {
-        $params = $event->request->getData();
-        $params['appid'] = $this->appId;
-        $params['mch_id'] = $this->mchId;
-        $params['nonce_str'] = $this->generateRandomString(32);
-        $params['sign_type'] = $this->signType;
-        $params['sign'] = $this->generateSignature($params);
-        $event->request->setData($params);
-    }
-
-    /**
-     * 生成签名
-     * @param array $params
-     * @return string
-     * @throws InvalidConfigException
-     */
-    protected function generateSignature(array $params)
-    {
-        $bizParameters = [];
-        foreach ($params as $k => $v) {
-            if ($k != "sign" && $v != "" && !is_array($v)) {
-                $bizParameters[$k] = $v;
-            }
-        }
-        ksort($bizParameters);
-        $bizString = urldecode(http_build_query($bizParameters) . '&key=' . $this->appKey);
-        if ($this->signType == self::SIGNATURE_METHOD_MD5) {
-            $sign = md5($bizString);
-        } elseif ($this->signType == self::SIGNATURE_METHOD_SHA256) {
-            $sign = hash_hmac('sha256', $bizString, $this->appKey);
-        } else {
-            throw new InvalidConfigException ('This encryption is not supported');
-        }
-        return strtoupper($sign);
-    }
-
-    /**
      * 服务端通知
      * @param Request $request
      * @param string $paymentId
@@ -253,16 +267,5 @@ class Wechat extends BaseClient
         }
         echo '<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[FAIL]]></return_msg></xml>';
         return false;
-    }
-
-    /**
-     * 转换XML到数组
-     * @param \SimpleXMLElement|string $xml
-     * @return array
-     */
-    protected function convertXmlToArray($xml)
-    {
-        libxml_disable_entity_loader(true);
-        return json_decode(json_encode(simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
     }
 }

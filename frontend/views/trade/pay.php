@@ -1,7 +1,4 @@
 <?php
-/**
- * @link http://www.tintsoft.com/
- * @copyright Copyright (c) 2012 TintSoft Technology Co. Ltd.
- * @license http://www.tintsoft.com/license/
- */
- 
+
+//二维码付款
+?>
