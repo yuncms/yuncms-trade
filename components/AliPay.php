@@ -271,7 +271,6 @@ class AliPay extends BaseClient
         if ($response->isOk) {
             $responseNode = str_replace('.', '_', $params['method']) . '_response';
             if (isset($response->data[$responseNode]) && isset($response->data['sign'])) {
-                print_r($response->data);
                 return $this->verify($response->data[$responseNode], $response->data['sign'], true);
             } else {
                 throw new PaymentException('Http request failed.');
