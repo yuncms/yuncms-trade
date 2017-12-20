@@ -58,6 +58,17 @@ class AliPay extends BaseClient
     public $redirectMethod = 'QRCODE';
 
     /**
+     * @var array 交易类型
+     */
+    public $tradeTypeMap = [
+        Trade::TYPE_NATIVE => 'NATIVE',//WEB 原生扫码支付
+        Trade::TYPE_JS_API => 'JSAPI',//应用内JS API,如微信
+        Trade::TYPE_APP => 'APP',//app支付
+        Trade::TYPE_H5 => 'MWEB',//H5支付
+        Trade::TYPE_MICROPAY => 'MICROPAY',//刷卡支付
+    ];
+
+    /**
      * 初始化
      * @throws InvalidConfigException
      */
@@ -171,14 +182,15 @@ class AliPay extends BaseClient
     }
 
     /**
-     * 统一下单
+     * 去支付
      * @param Trade $trade
      * @param array $paymentParams
      * @throws PaymentException
      */
     public function payment(Trade $trade, &$paymentParams)
     {
-        $paymentParams = $this->preCreate($trade->toArray());
+        $response = $this->preCreate($trade->toArray());
+        $paymentParams['qr_code'] = $response['qr_code'];
     }
 
     /**

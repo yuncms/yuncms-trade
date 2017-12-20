@@ -13,6 +13,7 @@ use yii\httpclient\Client;
 use yii\httpclient\RequestEvent;
 use yii\base\InvalidConfigException;
 use yuncms\trade\BaseClient;
+use yuncms\trade\models\Trade;
 
 /**
  * Class Wechat
@@ -62,11 +63,11 @@ class Wechat extends BaseClient
      * @var array 交易类型
      */
     public $tradeTypeMap = [
-        1 => 'NATIVE',//WEB 原生扫码支付
-        2 => 'JSAPI',//应用内JS API,如微信
-        3 => 'APP',//app支付
-        4 => 'MWEB',//H5支付
-        5 => 'MICROPAY',//刷卡支付
+        Trade::TYPE_NATIVE => 'NATIVE',//WEB 原生扫码支付
+        Trade::TYPE_JS_API => 'JSAPI',//应用内JS API,如微信
+        Trade::TYPE_APP => 'APP',//app支付
+        Trade::TYPE_H5 => 'MWEB',//H5支付
+        Trade::TYPE_MICROPAY => 'MICROPAY',//刷卡支付
     ];
 
     /**
@@ -175,21 +176,35 @@ class Wechat extends BaseClient
      * @param array $params
      * @return mixed
      */
-    public function preCreate(array $params, array $paymentParams)
+    public function preCreate(array $params)
     {
         $data = [
             'body' => $params['subject'],
             'out_trade_no' => $params['id'],
             'total_fee' => round($params['total_amount'] * 100),
             'fee_type' => $params['currency'],
-            'trade_type' => $params['type'],
-            'notify_url' => 'http://www.openedu.tv',//$this->getNoticeUrl(),
+            'trade_type' => 'NATIVE',
+            'notify_url' => $this->getNoticeUrl(),
             'device_info' => 'WEB',
             'spbill_create_ip' => Yii::$app->request->isConsoleRequest ? '127.0.0.1' : Yii::$app->request->userIP,
         ];
-        /** @var \yii\httpclient\Response $response */
         $response = $this->post('pay/unifiedorder', $data)->send();
+        if ($response->isOk && $response->data['return_code'] == 'SUCCESS') {
+            return $response->data;
+        }
         return $response->data;
+    }
+
+    /**
+     * 去支付
+     * @param Trade $trade
+     * @param array $paymentParams
+     * @throws PaymentException
+     */
+    public function payment(Trade $trade, &$paymentParams)
+    {
+        $response = $this->preCreate($trade->toArray());
+        $paymentParams['qr_code'] = $response['code_url'];
     }
 
     /**
