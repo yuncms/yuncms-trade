@@ -29,7 +29,8 @@ use yuncms\user\models\User;
  * @property string $model_class 发起收款的模型类名
  * @property integer $state 交易状态
  * @property string $ip 发起交易的用户IP
- * @property string $note 备注描述
+ * @property string $attach 附加数据
+ * @property string $data SDK数据
  * @property string $return_url 回跳Url
  * @property integer $created_at 创建时间
  * @property integer $updated_at 更新时间
@@ -148,8 +149,6 @@ class Trade extends ActiveRecord
             [['body'], 'string', 'max' => 128],
             ['data', 'string'],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['user_id' => 'id']],
-
-
         ];
     }
 
@@ -199,6 +198,20 @@ class Trade extends ActiveRecord
     }
 
     /**
+     * @return mixed
+     * @throws \yii\base\InvalidConfigException
+     */
+    public function getSdkParams()
+    {
+        if (!is_null($this->gateway)) {
+            $gateway = Yii::$app->payment->get($this->gateway);
+            return $gateway->preCreate($this);
+        } else {
+
+        }
+    }
+
+    /**
      * @inheritdoc
      * @return TradeQuery the active query used by this AR class.
      */
@@ -224,7 +237,6 @@ class Trade extends ActiveRecord
     {
         return $this->state == self::STATE_SUCCESS;
     }
-
 
     /**
      * 获取状态列表
@@ -333,10 +345,10 @@ class Trade extends ActiveRecord
             $trade->updateAttributes([
                 'pay_id' => $params['pay_id'],
                 'trade_state' => static::STATE_SUCCESS,
-                'note' => $params['message']
+                'attach' => $params['message']
             ]);//标记支付已经完成
             /** @var \yuncms\trade\OrderInterface $orderModel */
-            $orderModel = $trade->model;
+            $orderModel = $trade->model_class;
             if (!empty($trade->model_id) && !empty($orderModel)) {
                 $orderModel::setPayStatus($trade->model_id, $id, $status, $params);
             }
