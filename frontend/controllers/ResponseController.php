@@ -29,7 +29,7 @@ class ResponseController extends Controller
     /**
      * @var string|null 支付号
      */
-    public $paymentId = null;
+    public $tradeId = null;
 
     /**
      * @var string|null 平台支付号
@@ -59,9 +59,9 @@ class ResponseController extends Controller
      */
     public function actionReturn($gateway)
     {
-        $status = Yii::$app->payment->get($gateway)->callback(Yii::$app->request, $this->paymentId, $this->money, $this->message, $this->payId);
+        $status = Yii::$app->payment->get($gateway)->callback(Yii::$app->request, $this->tradeId, $this->money, $this->message, $this->payId);
         Trade::setPayStatus($this->paymentId, $status, ['money' => $this->money, 'message' => $this->message, 'pay_id' => $this->payId]);
-        return $this->redirect(['/payment/default/return', 'id' => $this->paymentId]);
+        return $this->redirect(['/payment/default/return', 'id' => $this->tradeId]);
     }
 
     /**
@@ -72,9 +72,9 @@ class ResponseController extends Controller
      */
     public function actionNotice($gateway)
     {
-        $status = Yii::$app->payment->get($gateway)->notice(Yii::$app->request, $this->paymentId, $this->money, $this->message, $this->payId);
+        $status = Yii::$app->payment->get($gateway)->notice(Yii::$app->request, $this->tradeId, $this->money, $this->message, $this->payId);
         //此处应该推送到队列处理
-        Trade::setPayStatus($this->paymentId, $status, ['money' => $this->money, 'message' => $this->message, 'pay_id' => $this->payId]);
+        Trade::setPayStatus($this->tradeId, $status, ['money' => $this->money, 'message' => $this->message, 'pay_id' => $this->payId]);
         Yii::$app->end();
     }
 }

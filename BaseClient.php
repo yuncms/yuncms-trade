@@ -265,7 +265,7 @@ abstract class BaseClient extends Client implements ClientInterface
 
             Yii::$app->response->content = $output;
             Yii::$app->end();
-        } else if ('QRCODE' === $this->redirectMethod) {
+        } else if ('QRCODE' === $this->redirectMethod) {//TODO
 
         }
         throw new \Exception('Invalid redirect method "' . $this->redirectMethod . '".');

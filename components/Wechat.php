@@ -208,7 +208,12 @@ class Wechat extends BaseClient
             'device_info' => 'WEB'
         ];
         if ($trade->type == Trade::TYPE_JS_API) {
-            //$trade->user->socialAccounts;
+            if (isset($trade->user->socialAccounts['wechat'])) {
+                $weParams = $trade->user->socialAccounts['wechat']->getDecodedData();
+                $data['openid'] = $weParams['openid'];
+            } else {
+                throw new Exception ('Non-WeChat authorized login.');
+            }
         }
         $response = $this->post('pay/unifiedorder', $data)->send();
         if ($response->isOk) {
@@ -266,13 +271,13 @@ class Wechat extends BaseClient
      * @param string $payId
      * @return mixed
      */
-    public function notice(Request $request, &$paymentId, &$money, &$message, &$payId)
+    public function notice(Request $request, &$tradeId, &$money, &$message, &$payId)
     {
         $xml = $request->getRawBody();
         //如果返回成功则验证签名
         try {
             $params = $this->convertXmlToArray($xml);
-            $paymentId = $params['out_trade_no'];
+            $tradeId = $params['out_trade_no'];
             $money = $params['total_fee'];
             $message = $params['return_code'];
             $payId = $params['transaction_id'];
