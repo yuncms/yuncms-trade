@@ -214,9 +214,6 @@ class Wechat extends BaseClient
         if ($response->isOk) {
             if ($response->data['return_code'] == 'SUCCESS') {
                 $trade->updateAttributes(['pay_id' => $response->data['prepay_id']]);
-                if ($trade->type == Trade::TYPE_APP) {
-                    return $this->getPackage($response->data['prepay_id']);
-                }
                 return $response->data;
             } else {
                 throw new PaymentException($response->data['return_msg']);
@@ -258,20 +255,6 @@ class Wechat extends BaseClient
     public function refund()
     {
 
-    }
-
-    /**
-     * 支付响应
-     * @param Request $request
-     * @param $paymentId
-     * @param $money
-     * @param $message
-     * @param $payId
-     * @return mixed
-     */
-    public function callback(Request $request, &$paymentId, &$money, &$message, &$payId)
-    {
-        return;
     }
 
     /**
@@ -322,5 +305,19 @@ class Wechat extends BaseClient
         ];
         $tradeParams['sign'] = $this->generateSignature($tradeParams);
         return $tradeParams;
+    }
+
+    /**
+     * 支付响应
+     * @param Request $request
+     * @param $paymentId
+     * @param $money
+     * @param $message
+     * @param $payId
+     * @return mixed
+     */
+    public function callback(Request $request, &$paymentId, &$money, &$message, &$payId)
+    {
+        return;
     }
 }
