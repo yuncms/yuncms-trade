@@ -75,8 +75,6 @@ class TradeController extends Controller
             $trade = $this->findModel($id);
             $paymentParams = [];
             Yii::$app->payment->get($trade->gateway)->payment($trade, $paymentParams);
-
-
             if (Yii::$app->request->isAjax) {
                 return $this->renderPartial('pay', ['trade' => $trade, 'paymentParams' => $paymentParams]);
             } else {
