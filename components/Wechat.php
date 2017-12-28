@@ -8,12 +8,14 @@
 namespace yuncms\trade\components;
 
 use Yii;
+use yii\base\Exception;
 use yii\web\Request;
 use yii\httpclient\Client;
 use yii\httpclient\RequestEvent;
 use yii\base\InvalidConfigException;
 use yuncms\trade\BaseClient;
 use yuncms\trade\models\Trade;
+use yuncms\trade\PaymentException;
 
 /**
  * Class Wechat
@@ -178,6 +180,7 @@ class Wechat extends BaseClient
      * @param Trade $trade
      * @param array $paymentParams 支付参数
      * @return void
+     * @throws Exception
      */
     public function payment(Trade $trade, &$paymentParams)
     {
@@ -190,6 +193,7 @@ class Wechat extends BaseClient
      * 统一下单
      * @param Trade $trade
      * @return mixed
+     * @throws \yii\base\Exception
      */
     public function preCreate(Trade $trade)
     {
@@ -198,7 +202,7 @@ class Wechat extends BaseClient
             'out_trade_no' => $trade->id,
             'total_fee' => round($trade->total_amount * 100),
             'fee_type' => $trade->currency,
-            'trade_type' => 'APP',//isset($this->tradeTypeMap[$trade->type]) ? $this->tradeTypeMap[$trade->type] : 'NATIVE',
+            'trade_type' => isset($this->tradeTypeMap[$trade->type]) ? $this->tradeTypeMap[$trade->type] : 'NATIVE',
             'notify_url' => $this->getNoticeUrl(),
             'spbill_create_ip' => Yii::$app->request->isConsoleRequest ? '127.0.0.1' : Yii::$app->request->userIP,
             'device_info' => 'WEB'
@@ -207,10 +211,19 @@ class Wechat extends BaseClient
             //$trade->user->socialAccounts;
         }
         $response = $this->post('pay/unifiedorder', $data)->send();
-        if ($response->isOk && $response->data['return_code'] == 'SUCCESS') {
-            return $response->data;
+        if ($response->isOk) {
+            if ($response->data['return_code'] == 'SUCCESS') {
+                $trade->updateAttributes(['pay_id' => $response->data['prepay_id']]);
+                if ($trade->type == Trade::TYPE_APP) {
+                    return $this->getPackage($response->data['prepay_id']);
+                }
+                return $response->data;
+            } else {
+                throw new PaymentException($response->data['return_msg']);
+            }
+        } else {
+            throw new Exception ('Http request failed.');
         }
-        return $response->data;
     }
 
     /**
@@ -288,5 +301,26 @@ class Wechat extends BaseClient
         }
         echo '<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[FAIL]]></return_msg></xml>';
         return false;
+    }
+
+    /**
+     * 获取手机APP支付参数
+     * @param string $prepayId
+     * @return array 支付参数
+     * @throws InvalidConfigException
+     * @throws \yii\base\Exception
+     */
+    public function getPackage($prepayId)
+    {
+        $tradeParams = [
+            'appid' => $this->appId,
+            'partnerid' => $this->mchId,
+            'prepayid' => $prepayId,
+            'package' => 'Sign=WXPay',
+            'noncestr' => $this->generateRandomString(32),
+            'timestamp' => time(),
+        ];
+        $tradeParams['sign'] = $this->generateSignature($tradeParams);
+        return $tradeParams;
     }
 }

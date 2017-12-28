@@ -146,6 +146,7 @@ class Trade extends ActiveRecord
             [['pay_id', 'subject', 'model_class'], 'string', 'max' => 255],
             [['currency'], 'string', 'max' => 20],
             [['body'], 'string', 'max' => 128],
+            ['data', 'string'],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['user_id' => 'id']],
 
 
@@ -173,6 +174,7 @@ class Trade extends ActiveRecord
             'state' => Yii::t('trade', 'Trade State'),
             'ip' => Yii::t('trade', 'IP'),
             'attach' => Yii::t('trade', 'Attach'),
+            'data' => Yii::t('trade', 'Data'),
             'return_url' => Yii::t('trade', 'Return Url'),
             'created_at' => Yii::t('trade', 'Created At'),
             'updated_at' => Yii::t('trade', 'Updated At'),
@@ -222,7 +224,6 @@ class Trade extends ActiveRecord
     {
         return $this->state == self::STATE_SUCCESS;
     }
-
 
 
     /**
