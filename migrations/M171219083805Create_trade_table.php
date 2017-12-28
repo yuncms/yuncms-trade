@@ -30,7 +30,7 @@ class M171219083805Create_trade_table extends Migration
             'model_class' => $this->string()->comment('Model Class'),//发起模型的类名
             'state' => $this->smallInteger()->notNull()->comment('Trade State'),//交易状态
             'ip' => $this->string()->notNull()->comment('IP'),//用户IP
-            'note' => $this->text()->comment('Note'),//备注
+            'attach' => $this->text()->comment('Attach'),//附加数据
             'return_url' => $this->text()->comment('Return Url'),//回跳URL
             'created_at' => $this->integer()->notNull()->comment('Created At'),//创建时间
             'updated_at' => $this->integer()->notNull()->comment('Updated At'),//更新时间

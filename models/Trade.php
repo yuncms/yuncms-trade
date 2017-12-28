@@ -139,7 +139,7 @@ class Trade extends ActiveRecord
 
             [['user_id', 'type', 'model_id', 'state'], 'integer'],
 
-            [['note', 'return_url'], 'string'],
+            [['attach', 'return_url'], 'string'],
 
             [['gateway'], 'string', 'max' => 50],
 
@@ -172,7 +172,7 @@ class Trade extends ActiveRecord
             'model_class' => Yii::t('trade', 'Model Class'),
             'state' => Yii::t('trade', 'Trade State'),
             'ip' => Yii::t('trade', 'IP'),
-            'note' => Yii::t('trade', 'Note'),
+            'attach' => Yii::t('trade', 'Attach'),
             'return_url' => Yii::t('trade', 'Return Url'),
             'created_at' => Yii::t('trade', 'Created At'),
             'updated_at' => Yii::t('trade', 'Updated At'),

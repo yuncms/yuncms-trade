@@ -58,7 +58,7 @@ class AliPay extends BaseClient
     public $redirectMethod = 'QRCODE';
 
     /**
-     * @var array 交易类型
+     * @var array 交易类型和Trade映射
      */
     public $tradeTypeMap = [
         Trade::TYPE_NATIVE => 'NATIVE',//WEB 原生扫码支付

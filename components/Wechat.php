@@ -30,17 +30,19 @@ class Wechat extends BaseClient
     public $baseUrl = 'https://api.mch.weixin.qq.com';
 
     /**
-     * @var string 绑定支付的APPID
+     * @var string 绑定支付的开放平台 APPID
      */
     public $appId;
 
     /**
      * @var string 商户支付密钥
+     * @see https://pay.weixin.qq.com/index.php/core/cert/api_cert
      */
-    public $appKey;
+    public $apiKey;
 
     /**
      * @var string 商户号
+     * @see https://pay.weixin.qq.com/index.php/core/account/info
      */
     public $mchId;
 
@@ -60,7 +62,7 @@ class Wechat extends BaseClient
     public $signType = self::SIGNATURE_METHOD_SHA256;
 
     /**
-     * @var array 交易类型
+     * @var array 交易类型和Trade映射
      */
     public $tradeTypeMap = [
         Trade::TYPE_NATIVE => 'NATIVE',//WEB 原生扫码支付
@@ -80,8 +82,8 @@ class Wechat extends BaseClient
         if (empty ($this->appId)) {
             throw new InvalidConfigException ('The "appId" property must be set.');
         }
-        if (empty ($this->appKey)) {
-            throw new InvalidConfigException ('The "appKey" property must be set.');
+        if (empty ($this->apiKey)) {
+            throw new InvalidConfigException ('The "apiKey" property must be set.');
         }
         if (empty ($this->mchId)) {
             throw new InvalidConfigException ('The "mchId" property must be set.');
@@ -149,11 +151,11 @@ class Wechat extends BaseClient
             }
         }
         ksort($bizParameters);
-        $bizString = urldecode(http_build_query($bizParameters) . '&key=' . $this->appKey);
+        $bizString = urldecode(http_build_query($bizParameters) . '&key=' . $this->apiKey);
         if ($this->signType == self::SIGNATURE_METHOD_MD5) {
             $sign = md5($bizString);
         } elseif ($this->signType == self::SIGNATURE_METHOD_SHA256) {
-            $sign = hash_hmac('sha256', $bizString, $this->appKey);
+            $sign = hash_hmac('sha256', $bizString, $this->apiKey);
         } else {
             throw new InvalidConfigException ('This encryption is not supported');
         }
@@ -172,40 +174,43 @@ class Wechat extends BaseClient
     }
 
     /**
+     * 生成支付信息
+     * @param Trade $trade
+     * @param array $paymentParams 支付参数
+     * @return void
+     */
+    public function payment(Trade $trade, &$paymentParams)
+    {
+        $r = $this->preCreate($trade);
+        print_r($r);
+        exit;
+    }
+
+    /**
      * 统一下单
-     * @param array $params
+     * @param Trade $trade
      * @return mixed
      */
-    public function preCreate(array $params)
+    public function preCreate(Trade $trade)
     {
         $data = [
-            'body' => $params['subject'],
-            'out_trade_no' => $params['id'],
-            'total_fee' => round($params['total_amount'] * 100),
-            'fee_type' => $params['currency'],
-            'trade_type' => 'APP',
+            'body' => $trade->subject,
+            'out_trade_no' => $trade->id,
+            'total_fee' => round($trade->total_amount * 100),
+            'fee_type' => $trade->currency,
+            'trade_type' => 'APP',//isset($this->tradeTypeMap[$trade->type]) ? $this->tradeTypeMap[$trade->type] : 'NATIVE',
             'notify_url' => $this->getNoticeUrl(),
-            //'device_info' => 'WEB',
             'spbill_create_ip' => Yii::$app->request->isConsoleRequest ? '127.0.0.1' : Yii::$app->request->userIP,
+            'device_info' => 'WEB'
         ];
+        if ($trade->type == Trade::TYPE_JS_API) {
+            //$trade->user->socialAccounts;
+        }
         $response = $this->post('pay/unifiedorder', $data)->send();
         if ($response->isOk && $response->data['return_code'] == 'SUCCESS') {
             return $response->data;
         }
         return $response->data;
-    }
-
-    /**
-     * 去支付
-     * @param Trade $trade
-     * @param array $paymentParams
-     * @throws PaymentException
-     */
-    public function payment(Trade $trade, &$paymentParams)
-    {
-        $response = $this->preCreate($trade->toArray());
-        print_r($response);exit;
-        $paymentParams['qr_code'] = $response['code_url'];
     }
 
     /**
