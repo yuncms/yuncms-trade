@@ -55,15 +55,11 @@ class ResponseController extends Controller
      * 支付后跳转
      * @param string $gateway
      * @return \yii\web\Response
-     * @throws NotFoundHttpException
+     * @throws \yii\base\InvalidConfigException
      */
     public function actionReturn($gateway)
     {
-        if (!$this->module->hasGateway($gateway)) {
-            throw new NotFoundHttpException("Unknown payment gateway '{$gateway}'");
-        }
-        $gateway = $this->module->getGateway($gateway);
-        $status = $gateway->callback(Yii::$app->request, $this->paymentId, $this->money, $this->message, $this->payId);
+        $status = Yii::$app->payment->get($gateway)->callback(Yii::$app->request, $this->paymentId, $this->money, $this->message, $this->payId);
         Trade::setPayStatus($this->paymentId, $status, ['money' => $this->money, 'message' => $this->message, 'pay_id' => $this->payId]);
         return $this->redirect(['/payment/default/return', 'id' => $this->paymentId]);
     }
@@ -71,16 +67,12 @@ class ResponseController extends Controller
     /**
      * 服务器端通知
      * @param string $gateway
-     * @throws NotFoundHttpException
      * @throws \yii\base\ExitException
+     * @throws \yii\base\InvalidConfigException
      */
     public function actionNotice($gateway)
     {
-        if (!$this->module->hasGateway($gateway)) {
-            throw new NotFoundHttpException("Unknown payment gateway '{$gateway}'");
-        }
-        $gateway = $this->module->getGateway($gateway);
-        $status = $gateway->notice(Yii::$app->request, $this->paymentId, $this->money, $this->message, $this->payId);
+        $status = Yii::$app->payment->get($gateway)->notice(Yii::$app->request, $this->paymentId, $this->money, $this->message, $this->payId);
         //此处应该推送到队列处理
         Trade::setPayStatus($this->paymentId, $status, ['money' => $this->money, 'message' => $this->message, 'pay_id' => $this->payId]);
         Yii::$app->end();

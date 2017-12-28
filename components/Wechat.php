@@ -183,9 +183,9 @@ class Wechat extends BaseClient
             'out_trade_no' => $params['id'],
             'total_fee' => round($params['total_amount'] * 100),
             'fee_type' => $params['currency'],
-            'trade_type' => 'NATIVE',
+            'trade_type' => 'APP',
             'notify_url' => $this->getNoticeUrl(),
-            'device_info' => 'WEB',
+            //'device_info' => 'WEB',
             'spbill_create_ip' => Yii::$app->request->isConsoleRequest ? '127.0.0.1' : Yii::$app->request->userIP,
         ];
         $response = $this->post('pay/unifiedorder', $data)->send();
@@ -204,6 +204,7 @@ class Wechat extends BaseClient
     public function payment(Trade $trade, &$paymentParams)
     {
         $response = $this->preCreate($trade->toArray());
+        print_r($response);exit;
         $paymentParams['qr_code'] = $response['code_url'];
     }
 
