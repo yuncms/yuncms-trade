@@ -28,7 +28,7 @@ class M171219083805Create_trade_table extends Migration
             'body' => $this->string(128)->comment('Body'),//对交易或商品的描述
             'model_id' => $this->integer()->comment('Model ID'),//发起模型的ID
             'model_class' => $this->string()->comment('Model Class'),//发起模型的类名
-            'state' => $this->smallInteger()->notNull()->comment('Trade State'),//交易状态
+            'state' => $this->smallInteger(2)->notNull()->comment('Trade State'),//交易状态
             'ip' => $this->string()->notNull()->comment('IP'),//用户IP
             'attach' => $this->string()->comment('Attach'),//附加数据
             'data' => $this->text()->comment('data'),//SDK数据

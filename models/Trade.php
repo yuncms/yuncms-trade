@@ -129,16 +129,16 @@ class Trade extends ActiveRecord
 
             ['id', 'unique', 'message' => Yii::t('trade', 'This id has already been taken')],
 
-            ['type', 'default', 'value' => static::TYPE_NATIVE],
+            ['type', 'default', 'value' => static::TYPE_NATIVE, 'on' => [self::SCENARIO_CREATE]],
             ['type', 'in', 'range' => [static::TYPE_NATIVE, static::TYPE_JS_API, static::TYPE_APP, static::TYPE_H5, static::TYPE_MICROPAY, static::TYPE_OFFLINE,]],
 
             [['total_amount', 'discountable_amount'], 'number'],
             ['discountable_amount', 'default', 'value' => 0.00],
 
-            ['state', 'default', 'value' => static::STATE_NOT_PAY],
+            ['state', 'default', 'value' => static::STATE_NOT_PAY, 'on' => [self::SCENARIO_CREATE]],
             ['state', 'in', 'range' => [static::STATE_NOT_PAY, static::STATE_SUCCESS, static::STATE_FAILED, static::STATE_REFUND, static::STATE_CLOSED, static::STATE_REVOKED, static::STATE_ERROR,]],
 
-            [['user_id', 'type', 'model_id', 'state'], 'integer'],
+            [['user_id', 'type', 'model_id'], 'integer'],
 
             [['attach', 'return_url'], 'string'],
 
@@ -199,7 +199,6 @@ class Trade extends ActiveRecord
 
     /**
      * @return mixed
-     * @throws \yii\base\InvalidConfigException
      */
     public function getSdkParams()
     {
@@ -324,6 +323,21 @@ class Trade extends ActiveRecord
             $row = (new Query())->from(static::tableName())->where(['id' => $id])->exists();
         } while ($row);
         return $id;
+    }
+
+    /**
+     * 快速创建对象
+     * @param array $attributes
+     * @param boolean $runValidation
+     * @return bool|static
+     */
+    public static function create($attributes, $runValidation = true)
+    {
+        $model = new static ($attributes);
+        if ($model->save($runValidation)) {
+            return $model;
+        }
+        return false;
     }
 
     /**
