@@ -202,7 +202,7 @@ class Wechat extends BaseClient
             'out_trade_no' => $trade->id,
             'total_fee' => round($trade->total_amount * 100),
             'fee_type' => $trade->currency,
-            'trade_type' => isset($this->tradeTypeMap[$trade->type]) ? $this->tradeTypeMap[$trade->type] : 'NATIVE',
+            'trade_type' => $this->getTradeType($trade->type),
             'notify_url' => $this->getNoticeUrl(),
             'spbill_create_ip' => Yii::$app->request->isConsoleRequest ? '127.0.0.1' : Yii::$app->request->userIP,
             'device_info' => 'WEB'
@@ -265,7 +265,7 @@ class Wechat extends BaseClient
     /**
      * 服务端通知
      * @param Request $request
-     * @param string $paymentId
+     * @param string $tradeId
      * @param float $money
      * @param string $message
      * @param string $payId
@@ -292,13 +292,27 @@ class Wechat extends BaseClient
     }
 
     /**
+     * 支付响应
+     * @param Request $request
+     * @param $paymentId
+     * @param $money
+     * @param $message
+     * @param $payId
+     * @return mixed
+     */
+    public function callback(Request $request, &$paymentId, &$money, &$message, &$payId)
+    {
+        return;
+    }
+
+    /**
      * 获取手机APP支付参数
      * @param string $prepayId
      * @return array 支付参数
      * @throws InvalidConfigException
      * @throws \yii\base\Exception
      */
-    public function getPackage($prepayId)
+    public function getAppPayPackage($prepayId)
     {
         $tradeParams = [
             'appid' => $this->appId,
@@ -313,16 +327,12 @@ class Wechat extends BaseClient
     }
 
     /**
-     * 支付响应
-     * @param Request $request
-     * @param $paymentId
-     * @param $money
-     * @param $message
-     * @param $payId
-     * @return mixed
+     * 获取交易类型
+     * @param int $tradeType
+     * @return mixed|string
      */
-    public function callback(Request $request, &$paymentId, &$money, &$message, &$payId)
+    protected function getTradeType($tradeType)
     {
-        return;
+        return isset($this->tradeTypeMap[$tradeType]) ? $this->tradeTypeMap[$tradeType] : 'NATIVE';
     }
 }

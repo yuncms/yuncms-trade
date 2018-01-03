@@ -167,6 +167,11 @@ class AliPay extends BaseClient
      */
     public function preCreate(array $params)
     {
+        'alipay.trade.precreate';//统一收单交易预创建
+        'alipay.trade.create';//统一收单交易创建接口
+        'alipay.trade.page.pay';//PC
+        'alipay.trade.wap.pay';//H5
+        'alipay.trade.app.pay';//mobile
         $data = [
             'method' => 'alipay.trade.precreate',
             'biz_content' => [
@@ -211,30 +216,7 @@ class AliPay extends BaseClient
         return $this->sendRequest($data);
     }
 
-    /**
-     * 查询支付
-     * @param string $outTradeNo 交易号
-     * @return array|bool
-     * @throws PaymentException
-     */
-    public function query($outTradeNo)
-    {
-        $data = [
-            'method' => 'alipay.trade.query',
-            'biz_content' => [
-                'out_trade_no' => $outTradeNo,
-            ],
-        ];
-        return $this->sendRequest($data);
-    }
 
-    /**
-     *
-     */
-    public function pay()
-    {
-        $params['method'] = 'alipay.trade.create';
-    }
 
     /**
      * 关闭支付
@@ -333,5 +315,32 @@ class AliPay extends BaseClient
     public function notice(Request $request, &$paymentId, &$money, &$message, &$payId)
     {
         // TODO: Implement notice() method.
+    }
+
+    /**
+     * 支付查询
+     * @param Trade $trade
+     * @return array|bool
+     * @throws PaymentException
+     */
+    public function query(Trade $trade)
+    {
+        $data = [
+            'method' => 'alipay.trade.query',
+            'biz_content' => [
+                'out_trade_no' => $trade->outTradeNo,
+            ],
+        ];
+        return $this->sendRequest($data);
+    }
+
+    /**
+     * 获取交易类型
+     * @param int $tradeType
+     * @return mixed|string
+     */
+    protected function getTradeType($tradeType)
+    {
+        return isset($this->tradeTypeMap[$tradeType]) ? $this->tradeTypeMap[$tradeType] : 'NATIVE';
     }
 }
