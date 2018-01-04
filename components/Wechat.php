@@ -307,17 +307,17 @@ class Wechat extends BaseClient
 
     /**
      * 获取手机APP支付参数
-     * @param string $prepayId
+     * @param \yii\httpclient\Response $response
      * @return array 支付参数
      * @throws InvalidConfigException
      * @throws \yii\base\Exception
      */
-    public function getAppPayPackage($prepayId)
+    public function getAppParams($response)
     {
         $tradeParams = [
             'appid' => $this->appId,
             'partnerid' => $this->mchId,
-            'prepayid' => $prepayId,
+            'prepayid' => $response->data['prepay_id'],
             'package' => 'Sign=WXPay',
             'noncestr' => $this->generateRandomString(32),
             'timestamp' => time(),
