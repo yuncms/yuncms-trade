@@ -7,6 +7,8 @@
 
 namespace yuncms\trade;
 
+use yuncms\trade\models\Trade;
+
 /**
  * Interface ClientInterface
  * @package xutl\payment
@@ -45,26 +47,25 @@ interface ClientInterface
 
     /**
      * 统一下单
-     * @param array $params
-     * @param array $paymentParams
+     * @param Trade $trade
      * @return mixed
      */
-    //public function preCreate(array $params, array $paymentParams);
+    public function unifiedOrder(Trade $trade);
 
     /**
      * 查询订单
      * 该接口提供所有微信支付订单的查询，商户可以通过查询订单接口主动查询订单状态，完成下一步的业务逻辑。
-     * @param string $outTradeNo
+     * @param Trade $trade
      * @return array
      */
-    //public function query($outTradeNo);
+    public function query(Trade $trade);
 
     /**
      * 以下情况需要调用关单接口：商户订单支付失败需要生成新单号重新发起支付，要对原订单号调用关单，避免重复支付；系统下单后，用户支付超时，系统退出不再受理，避免用户继续，请调用关单接口。
-     * @param string $outTradeNo
+     * @param Trade $trade
      * @return bool
      */
-    //public function close($outTradeNo);
+    public function close(Trade $trade);
 
     /**
      * 申请退款

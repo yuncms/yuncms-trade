@@ -135,6 +135,7 @@ class Wechat extends BaseClient
         $params['nonce_str'] = $this->generateRandomString(32);
         $params['sign_type'] = $this->signType;
         $params['sign'] = $this->generateSignature($params);
+        //print_r($params);exit;
         $event->request->setData($params);
     }
 
@@ -176,26 +177,12 @@ class Wechat extends BaseClient
     }
 
     /**
-     * 生成支付信息
-     * @param Trade $trade
-     * @param array $paymentParams 支付参数
-     * @return void
-     * @throws Exception
-     */
-    public function payment(Trade $trade, &$paymentParams)
-    {
-        $r = $this->preCreate($trade);
-        print_r($r);
-        exit;
-    }
-
-    /**
-     * 统一下单
+     * 统一下单(公众号，扫码，APP，刷卡等支付均走这个方法)
      * @param Trade $trade
      * @return mixed
      * @throws \yii\base\Exception
      */
-    public function preCreate(Trade $trade)
+    public function unifiedOrder(Trade $trade)
     {
         $data = [
             'body' => $trade->subject,
@@ -205,14 +192,15 @@ class Wechat extends BaseClient
             'trade_type' => $this->getTradeType($trade->type),
             'notify_url' => $this->getNoticeUrl(),
             'spbill_create_ip' => Yii::$app->request->isConsoleRequest ? '127.0.0.1' : Yii::$app->request->userIP,
-            'device_info' => 'WEB'
+            'device_info' => 'WEB',
+            'attach' => $trade->attach,
         ];
         if ($trade->type == Trade::TYPE_JS_API) {
             if (isset($trade->user->socialAccounts['wechat'])) {
                 $weParams = $trade->user->socialAccounts['wechat']->getDecodedData();
                 $data['openid'] = $weParams['openid'];
             } else {
-                throw new Exception ('Non-WeChat authorized login.');
+                throw new PaymentException ('Non-WeChat authorized login.');
             }
         }
         $response = $this->post('pay/unifiedorder', $data)->send();
@@ -229,27 +217,41 @@ class Wechat extends BaseClient
     }
 
     /**
+     * 生成支付信息
+     * @param Trade $trade
+     * @param array $paymentParams 支付参数
+     * @return void
+     * @throws Exception
+     */
+    public function payment(Trade $trade, &$paymentParams)
+    {
+        $r = $this->unifiedOrder($trade);
+        print_r($r);
+        exit;
+    }
+
+    /**
      * 关闭订单
-     * @param string $outTradeNo
+     * @param Trade $trade
      * @return bool
      */
-    public function closeOrder($outTradeNo)
+    public function close(Trade $trade)
     {
         $response = $this->post('pay/closeorder', [
-            'out_trade_no' => $outTradeNo,
+            'out_trade_no' => $trade->outTradeNo,
         ])->send();
         return $response->data;
     }
 
     /**
      * 查询订单号
-     * @param string $outTradeNo
+     * @param Trade $trade
      * @return array
      */
-    public function query($outTradeNo)
+    public function query(Trade $trade)
     {
         $response = $this->post('pay/orderquery', [
-            'out_trade_no' => $outTradeNo,
+            'out_trade_no' => $trade->outTradeNo,
         ])->send();
         return $response->data;
     }
