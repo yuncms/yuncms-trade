@@ -90,23 +90,19 @@ class Wechat extends BaseClient
         if (empty ($this->mchId)) {
             throw new InvalidConfigException ('The "mchId" property must be set.');
         }
-        if (empty ($this->privateKey)) {
-            throw new InvalidConfigException ('The "privateKey" property must be set.');
+        if (!empty ($this->privateKey)) {
+            $privateKey = Yii::getAlias($this->privateKey);
+            $this->privateKey = openssl_pkey_get_private("file://" . $privateKey);
+            if ($this->privateKey === false) {
+                throw new InvalidConfigException(openssl_error_string());
+            }
         }
-        if (empty ($this->publicKey)) {
-            throw new InvalidConfigException ('The "publicKey" property must be set.');
-        }
-
-        $privateKey = Yii::getAlias($this->privateKey);
-
-        $this->privateKey = openssl_pkey_get_private("file://" . $privateKey);
-        if ($this->privateKey === false) {
-            throw new InvalidConfigException(openssl_error_string());
-        }
-        $publicKey = Yii::getAlias($this->publicKey);
-        $this->publicKey = openssl_pkey_get_public("file://" . $publicKey);
-        if ($this->publicKey === false) {
-            throw new InvalidConfigException(openssl_error_string());
+        if (!empty ($this->publicKey)) {
+            $publicKey = Yii::getAlias($this->publicKey);
+            $this->publicKey = openssl_pkey_get_public("file://" . $publicKey);
+            if ($this->publicKey === false) {
+                throw new InvalidConfigException(openssl_error_string());
+            }
         }
         $this->requestConfig['format'] = Client::FORMAT_XML;
         $this->responseConfig['format'] = Client::FORMAT_XML;
@@ -135,7 +131,7 @@ class Wechat extends BaseClient
         $params['nonce_str'] = $this->generateRandomString(32);
         $params['sign_type'] = $this->signType;
         $params['sign'] = $this->generateSignature($params);
-        //print_r($params);exit;
+        print_r($params);exit;
         $event->request->setData($params);
     }
 
