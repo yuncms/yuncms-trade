@@ -131,7 +131,6 @@ class Wechat extends BaseClient
         $params['nonce_str'] = $this->generateRandomString(32);
         $params['sign_type'] = $this->signType;
         $params['sign'] = $this->generateSignature($params);
-        print_r($params);exit;
         $event->request->setData($params);
     }
 
@@ -315,7 +314,7 @@ class Wechat extends BaseClient
         $tradeParams = [
             'appid' => $this->appId,
             'partnerid' => $this->mchId,
-            'prepayid' => $response->data['prepay_id'],
+            'prepayid' => $response['prepay_id'],
             'package' => 'Sign=WXPay',
             'noncestr' => $this->generateRandomString(32),
             'timestamp' => time(),
