@@ -19,6 +19,7 @@
   */
  class Payment extends ServiceLocator
  {
+
      /**
       * Payment constructor.
       * @param array $config

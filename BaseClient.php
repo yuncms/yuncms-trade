@@ -114,7 +114,6 @@ abstract class BaseClient extends Client implements ClientInterface
         if ($this->_title === null) {
             $this->_title = $this->defaultTitle();
         }
-
         return $this->_title;
     }
 
@@ -152,7 +151,7 @@ abstract class BaseClient extends Client implements ClientInterface
         if ($this->_returnUrl === null) {
             $this->_returnUrl = $this->defaultReturnUrl();
         }
-        return $this->_returnUrl;
+        return Url::to([$this->_returnUrl, 'gateway' => $this->getId()], true);
     }
 
     /**
@@ -171,7 +170,7 @@ abstract class BaseClient extends Client implements ClientInterface
         if ($this->_noticeUrl === null) {
             $this->_noticeUrl = $this->defaultNoticeUrl();
         }
-        return $this->_noticeUrl;
+        return Url::to([$this->_noticeUrl, 'gateway' => $this->getId()], true);
     }
 
     /**
@@ -180,7 +179,7 @@ abstract class BaseClient extends Client implements ClientInterface
      */
     public function defaultReturnUrl()
     {
-        return Url::to(['/trade/response/return', 'gateway' => $this->getId()], true);
+        return '/trade/response/return';
     }
 
     /**
@@ -189,7 +188,7 @@ abstract class BaseClient extends Client implements ClientInterface
      */
     public function defaultNoticeUrl()
     {
-        return Url::to(['/trade/response/notice', 'gateway' => $this->getId()], true);
+        return '/trade/response/notice';
     }
 
     /**

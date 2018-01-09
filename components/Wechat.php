@@ -190,6 +190,7 @@ class Wechat extends BaseClient
             'device_info' => 'WEB',
             'attach' => $trade->attach,
         ];
+        //print_r($data);exit;
         if ($trade->type == Trade::TYPE_JS_API) {
             if (isset($trade->user->socialAccounts['wechat'])) {
                 $weParams = $trade->user->socialAccounts['wechat']->getDecodedData();
