@@ -55,12 +55,11 @@ class ResponseController extends Controller
      * 支付后跳转
      * @param string $gateway
      * @return \yii\web\Response
-     * @throws \yii\base\InvalidConfigException
      */
     public function actionReturn($gateway)
     {
         $status = Yii::$app->payment->get($gateway)->callback(Yii::$app->request, $this->tradeId, $this->money, $this->message, $this->payId);
-        Trade::setPayStatus($this->paymentId, $status, ['money' => $this->money, 'message' => $this->message, 'pay_id' => $this->payId]);
+        Trade::setPayStatus($this->tradeId, $status, ['money' => $this->money, 'message' => $this->message, 'pay_id' => $this->payId]);
         return $this->redirect(['/payment/default/return', 'id' => $this->tradeId]);
     }
 
@@ -68,7 +67,6 @@ class ResponseController extends Controller
      * 服务器端通知
      * @param string $gateway
      * @throws \yii\base\ExitException
-     * @throws \yii\base\InvalidConfigException
      */
     public function actionNotice($gateway)
     {
