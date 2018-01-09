@@ -280,7 +280,6 @@ class Wechat extends BaseClient
             $message = $params['return_code'];
             $payId = $params['transaction_id'];
             if ($params['return_code'] == 'SUCCESS' && $params['sign'] == $this->generateSignature($params)) {
-                //签名校验通过
                 Trade::setPayStatus($tradeId, true, ['pay_id' => $payId, 'message' => $message]);
                 echo '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
                 return true;
