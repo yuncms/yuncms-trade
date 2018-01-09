@@ -63,27 +63,30 @@ class NoticeAction extends Action
 
     /**
      * @param string $gateway
-     * @return ClientInterface
+     * @return object
+     * @throws \yii\base\InvalidConfigException
      */
     public function getGateway($gateway)
     {
-        return Yii::$app->payment->get($gateway);
+        return Yii::$app->payment->get($gateway, false);
     }
 
     /**
      * run action
      * @param $gateway
      * @throws \yii\base\ExitException
+     * @throws \yii\base\InvalidConfigException
      */
     public function run($gateway)
     {
-        $gateway = $this->getGateway($gateway);
-        $status = $gateway->notice(Yii::$app->request, $this->tradeId, $this->money, $this->message, $this->payId);
-        Yii::$app->queue->push(new NoticeJob([
-            'tradeId' => $this->tradeId,
-            'status' => $status,
-            'params' => ['money' => $this->money, 'message' => $this->message, 'pay_id' => $this->payId]
-        ]));
+        if ($gateway = $this->getGateway($gateway) != null) {
+            $status = $gateway->notice(Yii::$app->request, $this->tradeId, $this->money, $this->message, $this->payId);
+            Yii::$app->queue->push(new NoticeJob([
+                'tradeId' => $this->tradeId,
+                'status' => $status,
+                'params' => ['money' => $this->money, 'message' => $this->message, 'pay_id' => $this->payId]
+            ]));
+        }
         Yii::$app->end();
     }
 }
