@@ -10,6 +10,7 @@ namespace yuncms\trade\actions;
 use Yii;
 use yii\base\Action;
 use yuncms\trade\ClientInterface;
+use yuncms\trade\jobs\NoticeJob;
 use yuncms\trade\models\Trade;
 
 /**
@@ -78,8 +79,11 @@ class NoticeAction extends Action
     {
         $gateway = $this->getGateway($gateway);
         $status = $gateway->notice(Yii::$app->request, $this->tradeId, $this->money, $this->message, $this->payId);
-        //此处应该推送到队列处理
-        Trade::setPayStatus($this->tradeId, $status, ['money' => $this->money, 'message' => $this->message, 'pay_id' => $this->payId]);
+        Yii::$app->queue->push(new NoticeJob([
+            'tradeId' => $this->tradeId,
+            'status' => $status,
+            'params' => ['money' => $this->money, 'message' => $this->message, 'pay_id' => $this->payId]
+        ]));
         Yii::$app->end();
     }
 }
