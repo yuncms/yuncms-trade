@@ -100,7 +100,7 @@ class Trade extends ActiveRecord
                 'attributes' => [
                     ActiveRecord::EVENT_BEFORE_INSERT => 'ip',
                 ],
-                'value' => function ($event) {
+                'value' => function () {
                     return Yii::$app->request->userIP;
                 }
             ],
@@ -195,19 +195,6 @@ class Trade extends ActiveRecord
     public function getUser()
     {
         return $this->hasOne(User::className(), ['id' => 'user_id']);
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getSdkParams()
-    {
-        if (!is_null($this->gateway)) {
-            $gateway = Yii::$app->payment->get($this->gateway);
-            return $gateway->preCreate($this);
-        } else {
-
-        }
     }
 
     /**
