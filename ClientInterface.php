@@ -81,4 +81,6 @@ interface ClientInterface
      */
     //public function refundQuery();
 
+    public function getAppParams($response);
+
 }
