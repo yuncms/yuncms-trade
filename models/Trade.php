@@ -345,7 +345,7 @@ class Trade extends ActiveRecord
         if ($status == true) {
             $trade->updateAttributes([
                 'pay_id' => $params['pay_id'],
-                'trade_state' => static::STATE_SUCCESS,
+                'state' => static::STATE_SUCCESS,
                 'attach' => $params['message']
             ]);//标记支付已经完成
             /** @var \yuncms\trade\OrderInterface $orderModel */

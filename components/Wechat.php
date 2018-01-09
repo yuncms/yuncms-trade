@@ -286,6 +286,7 @@ class Wechat extends BaseClient
                 return true;
             }
         } catch (\Exception $e) {
+            Yii::error($e->getMessage(), __CLASS__);
         }
         echo '<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[FAIL]]></return_msg></xml>';
         return false;
