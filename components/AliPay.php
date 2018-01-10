@@ -175,7 +175,7 @@ class AliPay extends BaseClient
             'discountable_amount' => $trade->discountable_amount,//可打折金额
             'return_url' => $this->getReturnUrl(),
         ];
-        if ($tradeType == $this->tradeTypeMap[Trade::TYPE_NATIVE]) {//电脑支付需要回跳地址
+        if ($tradeType == $this->tradeTypeMap[Trade::TYPE_NATIVE] || $tradeType == $this->tradeTypeMap[Trade::TYPE_H5]) {//H5或电脑支付需要回跳地址
             $bizContent['notify_url'] = $this->getNoticeUrl();
         }
         return $this->sendRequest(['method' => $tradeType, 'biz_content' => $bizContent,]);
@@ -194,18 +194,18 @@ class AliPay extends BaseClient
     }
 
     /**
-     * @param array $params
+     * @param Trade $trade
      * @return array|bool
      * @throws PaymentException
      */
-    public function create(array $params)
+    public function create(Trade $trade)
     {
         $data = [
             'method' => 'alipay.trade.create',
             'biz_content' => [
-                'out_trade_no' => $order->outTradeNo,
-                'total_amount' => $order->totalAmount,
-                'subject' => $order->subject
+                'out_trade_no' => $trade->outTradeNo,
+                'total_amount' => $trade->total_amount,
+                'subject' => $trade->subject
             ],
         ];
         return $this->sendRequest($data);
@@ -214,10 +214,10 @@ class AliPay extends BaseClient
 
     /**
      * 关闭支付
-     * @param string $outTradeNo
+     * @param Trade $trade
      * @return bool|void
      */
-    public function close($outTradeNo)
+    public function close(Trade $trade)
     {
 
     }
