@@ -79,7 +79,7 @@ class NoticeAction extends Action
      */
     public function run($gateway)
     {
-        if ($gateway = $this->getGateway($gateway) != null) {
+        if (($gateway = $this->getGateway($gateway)) != null) {
             $status = $gateway->notice(Yii::$app->request, $this->tradeId, $this->money, $this->message, $this->payId);
             Yii::$app->queue->push(new NoticeJob([
                 'tradeId' => $this->tradeId,
