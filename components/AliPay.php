@@ -8,6 +8,7 @@
 namespace yuncms\trade\components;
 
 use Yii;
+use yii\base\Exception;
 use yii\web\Request;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
@@ -40,7 +41,7 @@ class AliPay extends BaseClient
     /**
      * @var string 公钥
      */
-    public $publicKey;
+    public $publicKey = '@yuncms/trade/components/alipay/alipay_public.pem';
 
     /**
      * @var string 签名方法
@@ -100,6 +101,7 @@ class AliPay extends BaseClient
 
         $this->responseConfig['format'] = Client::FORMAT_JSON;
         $this->on(Client::EVENT_BEFORE_SEND, [$this, 'RequestEvent']);
+        $this->on(Client::EVENT_AFTER_SEND, [$this, 'ResponseEvent']);
     }
 
     /**
@@ -111,21 +113,26 @@ class AliPay extends BaseClient
     }
 
     /**
-     * 请求事件
-     * @param RequestEvent $event
-     * @return void
+     * 包装付款参数
+     * @param array $params
+     * @return array
      */
-    public function RequestEvent(RequestEvent $event)
+    public function buildPaymentParameter($params = [])
     {
-        $params = $event->request->getData();
-        $params = ArrayHelper::merge([
+        $defaultParams = [
             'app_id' => $this->appId,
             'format' => 'JSON',
             'charset' => 'utf-8',
             'sign_type' => $this->signType,
             'timestamp' => date('Y-m-d H:i:s'),
             'version' => '1.0',
-        ], $params);
+            'notify_url' => $this->getNoticeUrl()
+        ];
+        $params = ArrayHelper::merge($defaultParams, $params);
+        if ($params['method'] == $this->tradeTypeMap[Trade::TYPE_NATIVE] || $params['method'] == $this->tradeTypeMap[Trade::TYPE_H5]) {//H5或电脑支付需要回跳地址
+            $params['return_url'] = $this->getReturnUrl();
+        }
+
         $params['biz_content'] = Json::encode($params['biz_content']);
         //签名
         if ($this->signType == self::SIGNATURE_METHOD_RSA2) {
@@ -133,7 +140,40 @@ class AliPay extends BaseClient
         } elseif ($this->signType == self::SIGNATURE_METHOD_RSA) {
             $params['sign'] = openssl_sign($this->getSignContent($params), $sign, $this->privateKey, OPENSSL_ALGO_SHA1) ? base64_encode($sign) : null;
         }
+        return $params;
+    }
+
+    /**
+     * 请求事件
+     * @param RequestEvent $event
+     * @return void
+     */
+    public function RequestEvent(RequestEvent $event)
+    {
+        $params = $this->buildPaymentParameter($event->request->getData());
+        $event->request->setUrl('gateway.do');
+        $event->request->setMethod('POST');
         $event->request->setData($params);
+    }
+
+    /**
+     * @param RequestEvent $event
+     * @throws Exception
+     */
+    public function ResponseEvent(RequestEvent $event)
+    {
+        if ($event->response->isOk) {
+            $requestParams = $event->request->getData();
+            $responseNode = str_replace('.', '_', $requestParams['method']) . '_response';
+            if (!isset($event->response->data[$responseNode]) || !isset($event->response->data['sign'])) {
+                throw new PaymentException('Parsing the response failed.');
+            }
+            if (($event->response->data = $this->verify($event->response->data[$responseNode], $event->response->data['sign'], true)) == false) {
+                throw new PaymentException('Signature verification error.');
+            }
+        } else {
+            throw new Exception ('Http request failed.');
+        }
     }
 
     /**
@@ -173,12 +213,30 @@ class AliPay extends BaseClient
             'total_amount' => $trade->total_amount,//订单总金额
             'subject' => $trade->subject,//订单标题
             'discountable_amount' => $trade->discountable_amount,//可打折金额
-            'return_url' => $this->getReturnUrl(),
         ];
-        if ($tradeType == $this->tradeTypeMap[Trade::TYPE_NATIVE] || $tradeType == $this->tradeTypeMap[Trade::TYPE_H5]) {//H5或电脑支付需要回跳地址
-            $bizContent['notify_url'] = $this->getNoticeUrl();
-        }
-        return $this->sendRequest(['method' => $tradeType, 'biz_content' => $bizContent,]);
+
+        $response = $this->createRequest()->setData(['method' => $tradeType, 'biz_content' => $bizContent])->send();
+        print_r($response->data);
+        exit;
+    }
+
+    /**
+     * 获取App支付参数
+     * @param Trade $trade
+     * @return array
+     */
+    public function getAppPaymentParams(Trade $trade)
+    {
+        $tradeType = $this->getTradeType($trade->type);
+        $bizContent = [
+            'out_trade_no' => $trade->outTradeNo,//商户订单号
+            'total_amount' => $trade->total_amount,//订单总金额
+            'subject' => $trade->subject,//订单标题
+            'discountable_amount' => $trade->discountable_amount,//可打折金额
+        ];
+        $params = $this->buildPaymentParameter(['method' => $tradeType, 'biz_content' => $bizContent]);
+
+        return ['orderInfo' => http_build_query($params), 'isShowPayLoading' => true];
     }
 
     /**
@@ -247,41 +305,6 @@ class AliPay extends BaseClient
     }
 
     /**
-     * 网关请求参数
-     * @param array $params
-     * @return array|bool
-     * @throws PaymentException
-     */
-    public function sendRequest(array $params)
-    {
-        $response = $this->post('gateway.do', $params)->send();
-        if ($response->isOk) {
-            $responseNode = str_replace('.', '_', $params['method']) . '_response';
-            if (isset($response->data[$responseNode]) && isset($response->data['sign'])) {
-                return $this->verify($response->data[$responseNode], $response->data['sign'], true);
-            } else {
-                throw new PaymentException('Http request failed.');
-            }
-        } else {
-            throw new PaymentException('Gateway Exception');
-        }
-    }
-
-    /**
-     * 验证支付宝支付宝通知
-     * @param array $data 通知数据
-     * @param null $sign 数据签名
-     * @param bool $sync
-     * @return array|bool
-     */
-    public function verify($data, $sign = null, $sync = false)
-    {
-        $sign = is_null($sign) ? $data['sign'] : $sign;
-        $toVerify = $sync ? json_encode($data) : $this->getSignContent($data, true);
-        return openssl_verify($toVerify, base64_decode($sign), $this->publicKey, OPENSSL_ALGO_SHA256) === 1 ? $data : false;
-    }
-
-    /**
      * 支付响应
      * @param Request $request
      * @param $paymentId
@@ -334,6 +357,20 @@ class AliPay extends BaseClient
     protected function getTradeType($tradeType)
     {
         return isset($this->tradeTypeMap[$tradeType]) ? $this->tradeTypeMap[$tradeType] : 'alipay.trade.precreate';
+    }
+
+    /**
+     * 验证支付宝支付宝通知
+     * @param array $data 通知数据
+     * @param null $sign 数据签名
+     * @param bool $sync
+     * @return array|bool
+     */
+    public function verify($data, $sign = null, $sync = false)
+    {
+        $sign = is_null($sign) ? $data['sign'] : $sign;
+        $toVerify = $sync ? json_encode($data) : $this->getSignContent($data, true);
+        return openssl_verify($toVerify, base64_decode($sign), $this->publicKey, OPENSSL_ALGO_SHA256) === 1 ? $data : false;
     }
 
     /**

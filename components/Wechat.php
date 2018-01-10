@@ -227,6 +227,28 @@ class Wechat extends BaseClient
     }
 
     /**
+     * 获取手机APP支付参数
+     * @param Trade $trade
+     * @return array 支付参数
+     * @throws InvalidConfigException
+     * @throws \yii\base\Exception
+     */
+    public function getAppPaymentParams(Trade $trade)
+    {
+        $response = $this->unifiedOrder($trade);
+        $tradeParams = [
+            'appid' => $this->appId,
+            'partnerid' => $this->mchId,
+            'prepayid' => $response['prepay_id'],
+            'package' => 'Sign=WXPay',
+            'noncestr' => $this->generateRandomString(32),
+            'timestamp' => time(),
+        ];
+        $tradeParams['sign'] = $this->generateSignature($tradeParams);
+        return $tradeParams;
+    }
+
+    /**
      * 关闭订单
      * @param Trade $trade
      * @return bool
@@ -303,27 +325,6 @@ class Wechat extends BaseClient
     public function callback(Request $request, &$paymentId, &$money, &$message, &$payId)
     {
         return;
-    }
-
-    /**
-     * 获取手机APP支付参数
-     * @param \yii\httpclient\Response $response
-     * @return array 支付参数
-     * @throws InvalidConfigException
-     * @throws \yii\base\Exception
-     */
-    public function getAppParams($response)
-    {
-        $tradeParams = [
-            'appid' => $this->appId,
-            'partnerid' => $this->mchId,
-            'prepayid' => $response['prepay_id'],
-            'package' => 'Sign=WXPay',
-            'noncestr' => $this->generateRandomString(32),
-            'timestamp' => time(),
-        ];
-        $tradeParams['sign'] = $this->generateSignature($tradeParams);
-        return $tradeParams;
     }
 
     /**
