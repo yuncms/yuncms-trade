@@ -61,11 +61,11 @@ class AliPay extends BaseClient
      * @var array 交易类型和Trade映射
      */
     public $tradeTypeMap = [
-        Trade::TYPE_NATIVE => 'NATIVE',//WEB 原生扫码支付
-        Trade::TYPE_JS_API => 'JSAPI',//应用内JS API,如微信
-        Trade::TYPE_APP => 'APP',//app支付
-        Trade::TYPE_H5 => 'MWEB',//H5支付
-        Trade::TYPE_MICROPAY => 'MICROPAY',//刷卡支付
+        Trade::TYPE_NATIVE => 'alipay.trade.page.pay',//WEB 原生扫码支付
+        Trade::TYPE_JS_API => 'alipay.trade.create',//应用内JS API,如微信
+        Trade::TYPE_APP => 'alipay.trade.app.pay',//app支付
+        Trade::TYPE_H5 => 'alipay.trade.wap.pay',//H5支付
+        Trade::TYPE_MICROPAY => 'alipay.trade.precreate',//刷卡支付
     ];
 
     /**
@@ -160,41 +160,36 @@ class AliPay extends BaseClient
     }
 
     /**
-     * 统一下单
-     * @param array $params
-     * @return array|bool
-     * @throws PaymentException
+     * 统一下单(生活号，扫码，APP，刷卡等支付均走这个方法)
+     * @param Trade $trade
+     * @return mixed
+     * @throws \yii\base\Exception
      */
-    public function preCreate(array $params)
+    public function unifiedOrder(Trade $trade)
     {
-        'alipay.trade.precreate';//统一收单交易预创建
-        'alipay.trade.create';//统一收单交易创建接口
-        'alipay.trade.page.pay';//PC
-        'alipay.trade.wap.pay';//H5
-        'alipay.trade.app.pay';//mobile
-        $data = [
-            'method' => 'alipay.trade.precreate',
-            'biz_content' => [
-                'out_trade_no' => $params['id'],//商户订单号
-                'total_amount' => $params['total_amount'],//订单总金额
-                'subject' => $params['subject'],//订单标题
-                'discountable_amount' => $params['discountable_amount'],//可打折金额
-                'return_url' => $this->getReturnUrl(),
-                'notify_url' => $this->getNoticeUrl(),
-            ],
+        $tradeType = $this->getTradeType($trade->type);
+        $bizContent = [
+            'out_trade_no' => $trade->outTradeNo,//商户订单号
+            'total_amount' => $trade->total_amount,//订单总金额
+            'subject' => $trade->subject,//订单标题
+            'discountable_amount' => $trade->discountable_amount,//可打折金额
+            'return_url' => $this->getReturnUrl(),
         ];
-        return $this->sendRequest($data);
+        if ($tradeType == $this->tradeTypeMap[Trade::TYPE_NATIVE]) {//电脑支付需要回跳地址
+            $bizContent['notify_url'] = $this->getNoticeUrl();
+        }
+        return $this->sendRequest(['method' => $tradeType, 'biz_content' => $bizContent,]);
     }
 
     /**
      * 去支付
      * @param Trade $trade
      * @param array $paymentParams
-     * @throws PaymentException
+     * @throws \yii\base\Exception
      */
     public function payment(Trade $trade, &$paymentParams)
     {
-        $response = $this->preCreate($trade->toArray());
+        $response = $this->unifiedOrder($trade);
         $paymentParams['qr_code'] = $response['qr_code'];
     }
 
@@ -215,7 +210,6 @@ class AliPay extends BaseClient
         ];
         return $this->sendRequest($data);
     }
-
 
 
     /**
@@ -341,6 +335,16 @@ class AliPay extends BaseClient
      */
     protected function getTradeType($tradeType)
     {
-        return isset($this->tradeTypeMap[$tradeType]) ? $this->tradeTypeMap[$tradeType] : 'NATIVE';
+        return isset($this->tradeTypeMap[$tradeType]) ? $this->tradeTypeMap[$tradeType] : 'alipay.trade.precreate';
+    }
+
+    /**
+     * 查询退款
+     * 提交退款申请后，通过调用该接口查询退款状态。退款有一定延时，用零钱支付的退款20分钟内到账，银行卡支付的退款3个工作日后重新查询退款状态。
+     * @return mixed
+     */
+    public function getAppParams($response)
+    {
+        // TODO: Implement getAppParams() method.
     }
 }
