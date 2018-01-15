@@ -102,7 +102,8 @@ $this->params['breadcrumbs'][] = $this->title;
                        'format' => 'raw'
                     ],
                     'ip',
-                    'note:ntext',
+                    'data:ntext',
+                    'attach:ntext',
                     'created_at:datetime',
                     'updated_at:datetime',
                 ],

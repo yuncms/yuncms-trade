@@ -109,7 +109,6 @@ $this->registerJs("jQuery(\"#batch_deletion\").on(\"click\", function () {
                         'format' => 'raw'
                     ],
                     'ip',
-                    'note:ntext',
                     'created_at:datetime',
                     'updated_at:datetime',
                     [
