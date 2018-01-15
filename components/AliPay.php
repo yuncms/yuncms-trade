@@ -372,15 +372,4 @@ class AliPay extends BaseClient
         $toVerify = $sync ? json_encode($data) : $this->getSignContent($data, true);
         return openssl_verify($toVerify, base64_decode($sign), $this->publicKey, OPENSSL_ALGO_SHA256) === 1 ? $data : false;
     }
-
-    /**
-     * 查询退款
-     * 提交退款申请后，通过调用该接口查询退款状态。退款有一定延时，用零钱支付的退款20分钟内到账，银行卡支付的退款3个工作日后重新查询退款状态。
-     * @param array $response
-     * @return mixed
-     */
-    public function getAppParams($response)
-    {
-        // TODO: Implement getAppParams() method.
-    }
 }

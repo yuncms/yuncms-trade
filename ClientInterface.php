@@ -81,6 +81,11 @@ interface ClientInterface
      */
     //public function refundQuery();
 
-    public function getAppParams($response);
+    /**
+     * 获取手机APP参数
+     * @param Trade $trade
+     * @return mixed
+     */
+    public function getAppPaymentParams(Trade $trade);
 
 }

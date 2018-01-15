@@ -336,4 +336,5 @@ class Wechat extends BaseClient
     {
         return isset($this->tradeTypeMap[$tradeType]) ? $this->tradeTypeMap[$tradeType] : 'NATIVE';
     }
+
 }
