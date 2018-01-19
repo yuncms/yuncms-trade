@@ -348,10 +348,8 @@ class Trade extends ActiveRecord
                 'state' => static::STATE_SUCCESS,
                 'attach' => $params['message']
             ]);//标记支付已经完成
-            /** @var \yuncms\trade\OrderInterface $orderModel */
-            $orderModel = $trade->model_class;
             if (!empty($trade->model_id) && !empty($orderModel)) {
-                $orderModel::setPayStatus($trade->model_id, $id, $status, $params);
+                call_user_func_array([$trade->model_class, 'setPayStatus'], [$trade->model_id, $id, $status, $params]);
             }
             return true;
         }
