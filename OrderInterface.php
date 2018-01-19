@@ -19,7 +19,7 @@ interface OrderInterface
      * 设置支付状态
      * @param string $orderId 订单号
      * @param string $tradeId 支付号
-     * @param bool $status 状态
+     * @param integer $status 状态
      * @param array $params 附加参数
      * @return bool
      */

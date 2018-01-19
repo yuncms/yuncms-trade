@@ -9,6 +9,7 @@ use yii\db\BaseActiveRecord;
 use yii\helpers\ArrayHelper;
 use yii\behaviors\AttributeBehavior;
 use yii\behaviors\TimestampBehavior;
+use yuncms\trade\OrderInterface;
 use yuncms\user\models\User;
 
 /**
@@ -225,6 +226,36 @@ class Trade extends ActiveRecord
     }
 
     /**
+     * 生成交易流水号
+     * @return string
+     */
+    protected function generateOutTradeNo()
+    {
+        $i = rand(0, 9999);
+        do {
+            if (9999 == $i) {
+                $i = 0;
+            }
+            $i++;
+            $id = time() . str_pad($i, 4, '0', STR_PAD_LEFT);
+            $row = (new Query())->from(static::tableName())->where(['id' => $id])->exists();
+        } while ($row);
+        return $id;
+    }
+
+    /**
+     * 设置支付状态
+     * @param string $payId
+     * @param integer $state
+     * @param string $attach
+     * @return bool
+     */
+    public function setState($payId, $state, $attach)
+    {
+        return (bool)$this->updateAttributes(['pay_id' => $payId, 'state' => $state, 'attach' => $attach]);
+    }
+
+    /**
      * 获取状态列表
      * @return array
      */
@@ -236,6 +267,39 @@ class Trade extends ActiveRecord
             self::STATE_FAILED => Yii::t('trade', 'State Failed'),
             self::STATE_CLOSED => Yii::t('trade', 'State Close'),
         ];
+    }
+
+    /**
+     * 快速创建对象
+     * @param array $attributes
+     * @param boolean $runValidation
+     * @return bool|static
+     */
+    public static function create($attributes, $runValidation = true)
+    {
+        $model = new static ($attributes);
+        if ($model->save($runValidation)) {
+            return $model;
+        }
+        return false;
+    }
+
+    /**
+     * 设置支付状态
+     * @param string $id
+     * @param int $status
+     * @param array $params
+     * @return void
+     */
+    public static function setPayStatus($id, $status, $params)
+    {
+        if (($trade = static::findOne(['id' => $id])) != null && (!$trade->getIsSuccess() && $status == static::STATE_SUCCESS)) {
+            $trade->setState($params['pay_id'], static::STATE_SUCCESS, $params['message']);
+            //回调原始模型
+            if ((!empty($trade->model_id) && !empty($trade->model_class))) {
+                call_user_func_array([$trade->model_class, 'setPayStatus'], [$trade->model_id, $id, $status, $params]);
+            }
+        }
     }
 
 //    public function afterFind()
@@ -293,66 +357,4 @@ class Trade extends ActiveRecord
 //
 //        // ...custom code here...
 //    }
-
-    /**
-     * 生成交易流水号
-     * @return string
-     */
-    protected function generateOutTradeNo()
-    {
-        $i = rand(0, 9999);
-        do {
-            if (9999 == $i) {
-                $i = 0;
-            }
-            $i++;
-            $id = time() . str_pad($i, 4, '0', STR_PAD_LEFT);
-            $row = (new Query())->from(static::tableName())->where(['id' => $id])->exists();
-        } while ($row);
-        return $id;
-    }
-
-    /**
-     * 快速创建对象
-     * @param array $attributes
-     * @param boolean $runValidation
-     * @return bool|static
-     */
-    public static function create($attributes, $runValidation = true)
-    {
-        $model = new static ($attributes);
-        if ($model->save($runValidation)) {
-            return $model;
-        }
-        return false;
-    }
-
-    /**
-     * 设置支付状态
-     * @param string $id
-     * @param int $status
-     * @param array $params
-     * @return bool
-     */
-    public static function setPayStatus($id, $status, $params)
-    {
-        if (($trade = static::findOne(['id' => $id])) == null) {
-            return false;
-        }
-        if (static::STATE_SUCCESS == $trade->state) {
-            return true;
-        }
-        if ($status == true) {
-            $trade->updateAttributes([
-                'pay_id' => $params['pay_id'],
-                'state' => static::STATE_SUCCESS,
-                'attach' => $params['message']
-            ]);//标记支付已经完成
-            if (!empty($trade->model_id) && !empty($orderModel)) {
-                call_user_func_array([$trade->model_class, 'setPayStatus'], [$trade->model_id, $id, $status, $params]);
-            }
-            return true;
-        }
-        return false;
-    }
 }

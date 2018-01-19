@@ -203,7 +203,6 @@ class AliPay extends BaseClient
      * 统一下单(生活号，扫码，APP，刷卡等支付均走这个方法)
      * @param Trade $trade
      * @return mixed
-     * @throws \yii\base\Exception
      */
     public function unifiedOrder(Trade $trade)
     {
