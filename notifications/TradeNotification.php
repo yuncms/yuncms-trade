@@ -7,7 +7,8 @@
 
 namespace yuncms\trade\notifications;
 
-use yuncms\notification\Notification;
+use yuncms\notification\NotificationTrait;
+use yuncms\notifications\contracts\NotificationInterface;
 
 /**
  * Class TradeNotification
@@ -16,10 +17,8 @@ use yuncms\notification\Notification;
  * @author Tongle Xu <xutongle@gmail.com>
  * @since 1.0
  */
-class TradeNotification extends Notification
+class TradeNotification implements NotificationInterface
 {
-    public function getTitle()
-    {
-        
-    }
+    use NotificationTrait;
+
 }
