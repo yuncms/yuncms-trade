@@ -67,6 +67,7 @@ class TradeController extends Controller
      * WEB付款
      * @param int $id
      * @return string
+     * @throws \yii\base\InvalidConfigException
      */
     public function actionPay($id)
     {
